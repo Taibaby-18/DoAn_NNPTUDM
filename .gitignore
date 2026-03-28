@@ -1,0 +1,8 @@
+# Các file môi trường (Secret)
+.env
+
+# Các thư viện đã cài đặt (Nặng, không cần up)
+node_modules/
+
+# Các file ảnh đã upload (Để tránh làm rác repo)
+uploads/
