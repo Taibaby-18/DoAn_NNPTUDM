@@ -1,79 +1,58 @@
-const mongoose = require('mongoose');
 const User = require('../models/User');
-const Cart = require('../models/Cart');
-const Order = require('../models/Order');
-const OrderDetail = require('../models/OrderDetail');
-const Library = require('../models/Library');
+const Game = require('../models/Game');
+const Transaction = require('../models/Transaction');
 
-exports.checkoutCart = async (req, res) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
-
+const buyGame = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const { gameId } = req.body;
+    const userId = req.user._id || req.user.id; // Lấy ID của user đang đăng nhập từ Token
 
-    // 1. Fetch cart and calculate total
-    const cart = await Cart.findOne({ user: userId }).populate('items');
-    if (!cart || cart.items.length === 0) {
-      throw new Error('Cart is empty');
+    // 1. Tìm Game xem có tồn tại không
+    const game = await Game.findById(gameId);
+    if (!game) {
+      return res.status(404).json({ success: false, message: 'Không tìm thấy Game này!' });
     }
 
-    const totalAmount = cart.items.reduce((sum, item) => sum + item.price, 0);
+    // 2. Lấy thông tin User hiện tại
+    const user = await User.findById(userId);
 
-    // 2. Check wallet balance
-    const user = await User.findById(userId).session(session);
-    if (user.walletBalance < totalAmount) {
-      throw new Error('Insufficient wallet balance');
+    // 3. Kiểm tra xem user đã mua game này chưa
+    if (user.library && user.library.includes(gameId)) {
+      return res.status(400).json({ success: false, message: 'Commander đã sở hữu tựa game này rồi!' });
     }
 
-    // 3. Deduct from wallet
-    user.walletBalance -= totalAmount;
-    await user.save({ session });
+    // 4. Kiểm tra ví tiền
+    if (user.walletBalance < game.price) {
+      return res.status(400).json({ success: false, message: 'Ví không đủ tiền. Vui lòng nạp thêm!' });
+    }
 
-    // 4. Create Order
-    const order = new Order({
-      user: userId,
-      totalAmount,
-      status: 'Completed'
+    // 5. Tiến hành thanh toán (Trừ tiền + Thêm game vào thư viện)
+    user.walletBalance -= game.price;
+    if (!user.library) user.library = [];
+    user.library.push(game._id);
+
+    // 6. Lưu lại lịch sử giao dịch (Biên lai)
+    const transaction = await Transaction.create({
+      user: user._id,
+      game: game._id,
+      price: game.price,
+      status: 'completed'
     });
-    await order.save({ session });
 
-    // 5. Create OrderDetails
-    for (const game of cart.items) {
-      const orderDetail = new OrderDetail({
-        order: order._id,
-        game: game._id,
-        priceAtPurchase: game.price
-      });
-      await orderDetail.save({ session });
-    }
+    // 7. Lưu thay đổi của User vào Database
+    await user.save();
 
-    // 6. Add to Library (merge with existing)
-    let library = await Library.findOne({ user: userId }).session(session);
-    if (!library) {
-      library = new Library({ user: userId, ownedGames: [] });
-    }
-    const newGames = cart.items.map(item => item._id);
-    library.ownedGames.push(...newGames.filter(id => !library.ownedGames.includes(id)));
-    await library.save({ session });
-
-    // 7. Clear Cart
-    cart.items = [];
-    await cart.save({ session });
-
-    await session.commitTransaction();
-    session.endSession();
-
-    res.json({
-      message: 'Checkout successful',
-      orderId: order._id,
-      totalAmount,
-      libraryUpdated: true
+    res.status(200).json({
+      success: true,
+      message: 'Thanh toán thành công! Game đã được thêm vào thư viện.',
+      transaction,
+      newBalance: user.walletBalance
     });
+
   } catch (error) {
-    await session.abortTransaction();
-    session.endSession();
-    res.status(400).json({ message: error.message });
+    console.error("Lỗi thanh toán:", error);
+    res.status(500).json({ success: false, message: 'Lỗi server trong quá trình thanh toán' });
   }
 };
 
+module.exports = { buyGame };

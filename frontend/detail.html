@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chi Tiết Game | Taibaby-18 Store</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #121212; color: white; font-family: 'Inter', sans-serif; }
+        .epic-btn { background-color: #007dfc; transition: 0.3s; }
+        .epic-btn:hover { background-color: #0062c4; }
+        .gallery-thumb { cursor: pointer; opacity: 0.6; transition: 0.2s; }
+        .gallery-thumb:hover, .gallery-thumb.active { opacity: 1; border: 2px solid white; }
+    </style>
+</head>
+<body>
+    <nav class="bg-[#181818] p-4 flex justify-between items-center px-12 sticky top-0 z-50 border-b border-gray-800">
+        <div class="flex items-center gap-8">
+            <span class="text-xl font-black tracking-widest text-white">TAIBABY-18 STORE</span>
+            <a href="index.html" class="text-gray-400 hover:text-white uppercase text-xs font-bold">Khám phá</a>
+            <a href="cart.html" class="text-gray-400 hover:text-white uppercase text-xs font-bold">Giỏ hàng</a>
+            <a href="#" class="text-gray-400 hover:text-white uppercase text-xs font-bold">Thư viện</a>
+        </div>
+        <div class="flex items-center gap-6">
+            <div class="text-right">
+                <p id="userName" class="text-sm font-bold uppercase">OPERATOR</p>
+                <p id="userBalance" class="text-[#007dfc] text-xs font-bold">$0.00</p>
+            </div>
+            <button onclick="logout()" class="bg-gray-800 px-3 py-1 text-xs rounded hover:bg-red-600 transition">Thoát</button>
+        </div>
+    </nav>
+
+    <main class="max-w-[1200px] mx-auto py-12 px-6">
+        <h1 id="gameTitle" class="text-4xl font-black italic mb-8 uppercase">ĐANG TẢI DỮ LIỆU...</h1>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
+            <div class="lg:col-span-2">
+                <div id="mainMediaContainer" class="w-full bg-[#202020] aspect-video rounded-lg overflow-hidden flex items-center justify-center mb-4">
+                    <p class="text-gray-500 animate-pulse">Đang nạp dữ liệu hình ảnh...</p>
+                </div>
+
+                <div id="galleryStrip" class="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
+                    </div>
+
+                <div class="mt-12 space-y-8">
+                    <div>
+                        <h2 class="text-xl font-bold border-b border-gray-700 pb-2 mb-4 uppercase tracking-widest">Giới thiệu</h2>
+                        <p id="gameDesc" class="text-gray-300 leading-relaxed text-sm whitespace-pre-wrap"></p>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-bold border-b border-gray-700 pb-2 mb-4 uppercase tracking-widest">Cấu hình PC yêu cầu</h2>
+                        <p id="gamePC" class="text-gray-300 text-sm bg-[#181818] p-4 rounded border border-gray-800"></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lg:col-span-1">
+                <div class="sticky top-24">
+                    <img id="gameThumbnail" src="https://via.placeholder.com/400x500/202020/007dfc?text=TAIBABY-18+STORE" class="w-full rounded-lg shadow-xl mb-6 object-cover aspect-[3/4] border border-gray-800">
+                    
+                    <div class="text-3xl font-black mb-6" id="gamePrice">$0.00</div>
+                    
+                    <button onclick="buyNow()" class="w-full epic-btn text-white font-bold py-4 rounded mb-3 uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all">Mua Ngay</button>
+                    <button onclick="addToCart()" class="w-full border border-gray-600 hover:border-white text-white font-bold py-4 rounded transition uppercase tracking-widest text-sm hover:scale-[1.02] active:scale-95">Thêm Vào Giỏ</button>
+
+                    <div class="mt-8 space-y-3 text-sm border-t border-gray-800 pt-6">
+                        <div class="flex justify-between border-b border-gray-800 pb-2">
+                            <span class="text-gray-500">Nhà phát hành</span>
+                            <span id="gamePub" class="font-bold text-right text-gray-300"></span>
+                        </div>
+                        <div class="flex justify-between border-b border-gray-800 pb-2">
+                            <span class="text-gray-500">Nền tảng</span>
+                            <span class="font-bold text-right text-gray-300">Windows (PC)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const API_URL = "http://localhost:5000/api";
+        const token = localStorage.getItem('token');
+        const urlParams = new URLSearchParams(window.location.search);
+        const gameId = urlParams.get('id');
+
+        if(!token) window.location.href = 'login.html';
+        if(!gameId) { window.location.href = 'index.html'; }
+
+        let currentGame = null;
+
+        window.onload = async () => {
+            loadUserProfile();
+            await loadGameDetails();
+        };
+
+        // 1. Tải Profile
+        async function loadUserProfile() {
+            try {
+                const res = await fetch(`${API_URL}/users/profile`, { headers: { 'Authorization': `Bearer ${token}` }});
+                const profile = await res.json();
+                if(profile.success) {
+                    document.getElementById('userName').innerText = profile.data.username;
+                    const balance = profile.data.walletBalance || 0;
+                    document.getElementById('userBalance').innerText = `$${balance.toFixed(2)}`;
+                }
+            } catch (err) {}
+        }
+
+        // 2. Tải chi tiết Game & Xử lý Ảnh cực chuẩn
+        async function loadGameDetails() {
+            try {
+                const res = await fetch(`${API_URL}/games/${gameId}`);
+                const result = await res.json();
+                
+                if(!result.success) throw new Error("Game không tồn tại");
+                
+                currentGame = result.data;
+
+                // Điền thông tin Text
+                document.getElementById('gameTitle').innerText = currentGame.title || "Game chưa có tên";
+                document.getElementById('gameDesc').innerText = currentGame.description || "Chưa có mô tả.";
+                document.getElementById('gamePC').innerText = currentGame.pcRequirements || "Đang cập nhật...";
+                const price = currentGame.price !== undefined ? currentGame.price : 0;
+                document.getElementById('gamePrice').innerText = `$${price}`;
+                
+                // Vì đã bỏ populate, publisher đang là ID hoặc undefined, tạm để trống
+                document.getElementById('gamePub').innerText = "Kinetic Monolith";
+
+                // --- XỬ LÝ ẢNH BÌA DỌC (THUMBNAIL) ---
+                let thumbSrc = 'https://via.placeholder.com/400x500/202020/007dfc?text=TAIBABY-18+STORE';
+                if (currentGame.thumbnail) {
+                    thumbSrc = currentGame.thumbnail.startsWith('http') ? currentGame.thumbnail : `${API_URL.replace('/api', '')}${currentGame.thumbnail}`;
+                } else if (currentGame.imageUrl) {
+                    thumbSrc = currentGame.imageUrl.startsWith('http') ? currentGame.imageUrl : `${API_URL.replace('/api', '')}${currentGame.imageUrl}`;
+                }
+                const thumbImg = document.getElementById('gameThumbnail');
+                thumbImg.src = thumbSrc;
+                thumbImg.onerror = () => { thumbImg.src = 'https://via.placeholder.com/400x500/202020/007dfc?text=TAIBABY-18+STORE'; };
+
+                // --- XỬ LÝ MEDIA GALLERY (SLIDER) ---
+                const strip = document.getElementById('galleryStrip');
+                let mediaArray = [];
+
+                // Thêm Video nếu có
+                if(currentGame.trailerVideo) {
+                    const vidUrl = currentGame.trailerVideo.startsWith('http') ? currentGame.trailerVideo : `${API_URL.replace('/api', '')}${currentGame.trailerVideo}`;
+                    mediaArray.push({ type: 'video', url: vidUrl });
+                }
+
+                // Thêm ảnh Gallery nếu có
+                if(currentGame.gallery && currentGame.gallery.length > 0) {
+                    currentGame.gallery.forEach(img => {
+                        const fullImgUrl = img.startsWith('http') ? img : `${API_URL.replace('/api', '')}${img}`;
+                        mediaArray.push({ type: 'image', url: fullImgUrl });
+                    });
+                } else {
+                    // Nếu không có mảng gallery, lấy chính cái thumbnail làm hình to luôn cho đỡ trống
+                    mediaArray.push({ type: 'image', url: thumbSrc });
+                }
+
+                // Render dải Thumbnail và Main Media
+                if(mediaArray.length > 0) {
+                    window.mediaData = mediaArray;
+                    strip.innerHTML = mediaArray.map((media, index) => `
+                        <div onclick="setMainMedia(${index})" class="gallery-thumb flex-shrink-0 w-32 h-20 bg-[#202020] rounded overflow-hidden relative border-2 ${index === 0 ? 'border-white opacity-100' : 'border-transparent'}">
+                            ${media.type === 'video' ? `<span class="material-symbols-outlined absolute inset-0 m-auto text-white flex items-center justify-center bg-black/50">play_circle</span>` : ''}
+                            <img src="${media.type === 'video' ? 'https://via.placeholder.com/150x80/202020/007dfc?text=TRAILER' : media.url}" class="w-full h-full object-cover">
+                        </div>
+                    `).join('');
+                    
+                    setMainMedia(0);
+                }
+
+            } catch (err) {
+                alert("Lỗi tải chi tiết game!");
+                console.error(err);
+            }
+        }
+
+        // 3. Đổi Main Media
+        window.setMainMedia = (index) => {
+            const media = window.mediaData[index];
+            const container = document.getElementById('mainMediaContainer');
+            
+            if(media.type === 'video') {
+                container.innerHTML = `<video controls autoplay class="w-full h-full object-cover bg-black"><source src="${media.url}" type="video/mp4"></video>`;
+            } else {
+                container.innerHTML = `<img src="${media.url}" onerror="this.src='https://via.placeholder.com/1280x720/202020/007dfc?text=TAIBABY-18+STORE'" class="w-full h-full object-cover bg-[#202020]">`;
+            }
+
+            document.querySelectorAll('.gallery-thumb').forEach((el, i) => {
+                if(i === index) { el.classList.add('border-white', 'opacity-100'); el.classList.remove('border-transparent', 'opacity-60'); }
+                else { el.classList.remove('border-white', 'opacity-100'); el.classList.add('border-transparent', 'opacity-60'); }
+            });
+        };
+
+        // 4. Gọi API Mua & Thêm Giỏ hàng
+        async function buyNow() {
+            try {
+                const res = await fetch(`${API_URL}/checkout`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ gameId })
+                });
+                const data = await res.json();
+                alert(data.message);
+                if(data.success) loadUserProfile();
+            } catch(e) { alert("Lỗi kết nối"); }
+        }
+
+        async function addToCart() {
+            try {
+                const res = await fetch(`${API_URL}/cart/add`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ gameId })
+                });
+                const data = await res.json();
+                alert(data.message);
+            } catch(e) { alert("Lỗi kết nối"); }
+        }
+
+        function logout() { localStorage.removeItem('token'); window.location.href = 'login.html'; }
+    </script>
+</body>
+</html>

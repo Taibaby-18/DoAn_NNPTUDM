@@ -22,8 +22,10 @@ mongoose.connect(process.env.MONGO_URI)
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/checkout', require('./routes/checkout'));
 app.use('/api/upload', require('./routes/upload'));
-//app.use('/api', require('./routes/games'));
-//app.use('/api', require('./routes/users'));
+app.use('/api/games', require('./routes/games'));
+app.use('/api/users', require('./routes/users'));
+app.use('/api/cart', require('./routes/cart'));
+app.use('/api/reviews', require('./routes/reviews'));
 // Add other routes here...
 
 const PORT = process.env.PORT || 5000;

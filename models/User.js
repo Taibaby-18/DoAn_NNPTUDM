@@ -6,6 +6,8 @@ const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   walletBalance: { type: Number, default: 0 },
+  library: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Game' }], // TÚI ĐỒ: Chứa ID các game đã mua
+  cart: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Game' }],
   role: { type: mongoose.Schema.Types.ObjectId, ref: 'Role', required: true }
 }, { timestamps: true });
 
@@ -21,4 +23,3 @@ userSchema.methods.comparePassword = async function(candidatePassword) {
 };
 
 module.exports = mongoose.model('User', userSchema);
-

@@ -28,5 +28,18 @@ const adminMiddleware = (req, res, next) => {
   next();
 };
 
-module.exports = { authMiddleware, adminMiddleware };
+const authorize = (roles) => {
+  return (req, res, next) => {
+    if (!req.user || !roles.includes(req.user.role.name)) {
+      return res.status(403).json({ message: 'Access denied for this role' });
+    }
+    next();
+  };
+};
+
+module.exports = { 
+  protect: authMiddleware, 
+  authorize,
+  adminMiddleware 
+};
 

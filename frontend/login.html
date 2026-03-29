@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Đăng Nhập | Taibaby Store</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style> body { background-color: #121212; color: white; } </style>
+</head>
+<body class="flex items-center justify-center min-h-screen">
+    <div class="w-full max-w-md p-8 bg-[#181818] rounded-md border border-gray-800">
+        <h2 class="text-2xl font-bold text-center mb-8 uppercase">Đăng Nhập</h2>
+        <form id="loginForm" class="space-y-4">
+            <input type="email" id="email" placeholder="Email" class="w-full p-4 bg-[#202020] border border-gray-700 rounded focus:border-[#007dfc] outline-none" required>
+            <input type="password" id="password" placeholder="Mật khẩu" class="w-full p-4 bg-[#202020] border border-gray-700 rounded focus:border-[#007dfc] outline-none" required>
+            <button type="submit" class="w-full bg-[#007dfc] py-4 rounded font-bold uppercase hover:brightness-110">Đăng Nhập</button>
+        </form>
+        <p class="mt-6 text-center text-gray-500 text-sm">
+            Chưa có tài khoản? <a href="register.html" class="text-white hover:underline">Đăng ký</a>
+        </p>
+    </div>
+    <script>
+        document.getElementById('loginForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const res = await fetch('http://localhost:5000/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    email: document.getElementById('email').value,
+                    password: document.getElementById('password').value
+                })
+            });
+            const data = await res.json();
+            if(data.token) {
+                localStorage.setItem('token', data.token);
+                window.location.href = 'index.html';
+            } else { alert(data.message); }
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Đăng Ký | Taibaby Store</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #121212; color: white; }
+        .epic-input { background-color: #202020; border: 1px solid #333; transition: 0.3s; }
+        .epic-input:focus { border-color: #007dfc; outline: none; background-color: #2a2a2a; }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen">
+    <div class="w-full max-w-md p-8 bg-[#181818] rounded-md shadow-2xl">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold uppercase tracking-tighter">TAIBABY STORE</h1>
+            <p class="text-gray-400 text-sm mt-2">Tạo tài khoản để bắt đầu hành trình</p>
+        </div>
+        <form id="regForm" class="space-y-4">
+            <input type="text" id="username" placeholder="Tên hiển thị" class="w-full p-4 epic-input rounded" required>
+            <input type="email" id="email" placeholder="Địa chỉ Email" class="w-full p-4 epic-input rounded" required>
+            <input type="password" id="password" placeholder="Mật khẩu" class="w-full p-4 epic-input rounded" required>
+            <button type="submit" class="w-full bg-[#007dfc] hover:bg-[#0062c4] py-4 rounded font-bold uppercase transition">Đăng Ký Ngay</button>
+        </form>
+        <p class="mt-6 text-center text-gray-500 text-sm">
+            Đã có tài khoản? <a href="login.html" class="text-white hover:underline">Đăng nhập</a>
+        </p>
+    </div>
+
+    <script>
+        document.getElementById('regForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const res = await fetch('http://localhost:5000/api/auth/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    username: document.getElementById('username').value,
+                    email: document.getElementById('email').value,
+                    password: document.getElementById('password').value
+                })
+            });
+            const data = await res.json();
+            alert(data.message);
+            if(data.success) window.location.href = 'login.html';
+        };
+    </script>
+</body>
+</html>
