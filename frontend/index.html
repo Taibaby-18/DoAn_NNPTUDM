@@ -24,6 +24,7 @@
             <a href="index.html" class="text-white uppercase text-xs font-bold border-b-2 border-white pb-1">Khám phá</a>
             <a href="cart.html" class="text-gray-400 hover:text-white uppercase text-xs font-bold">Giỏ hàng</a>
             <a href="library.html" class="text-gray-400 hover:text-white uppercase text-xs font-bold">Thư viện</a>
+            <a href="topup.html" class="text-gray-400 hover:text-white uppercase text-xs font-bold">Nạp ví</a>
         </div>
         <div class="flex items-center gap-6">
             <div class="text-right">
@@ -40,24 +41,268 @@
             <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent flex flex-col justify-end p-12">
                 <h2 class="text-5xl font-black italic">BLACK MYTH: WUKONG</h2>
                 <p class="max-w-md mt-4 text-gray-300">Tựa game hành động nhập vai đỉnh cao lấy cảm hứng từ Tây Du Ký.</p>
-                <button onclick="buyNow('DÁN_ID_WUKONG_CỦA_ÔNG_VÀO_ĐÂY')" class="mt-6 bg-white text-black px-8 py-3 rounded font-black w-fit hover:bg-gray-200 uppercase transition">Mua ngay</button>
+                <button onclick="buyNow('69c8e019e26cea1d2a9768f3')" class="mt-6 bg-white text-black px-8 py-3 rounded font-black w-fit hover:bg-gray-200 uppercase transition">Mua ngay</button>
             </div>
         </div>
     </header>
 
     <main class="px-12 pb-24">
         <h3 class="text-xl font-bold mb-8 uppercase tracking-widest border-l-4 border-[#007dfc] pl-3">Sản phẩm mới</h3>
+
+        <section class="mb-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="md:col-span-2">
+                <label for="filterName" class="block text-xs font-bold uppercase text-gray-400 mb-2">Tìm theo tên game</label>
+                <input id="filterName" type="text" placeholder="Nhập tên game..."
+                    class="w-full bg-[#181818] border border-gray-800 rounded px-4 py-3 text-sm outline-none focus:border-[#007dfc]" />
+            </div>
+            <div>
+                <label for="filterCategory" class="block text-xs font-bold uppercase text-gray-400 mb-2">Category</label>
+                <select id="filterCategory"
+                    class="w-full bg-[#181818] border border-gray-800 rounded px-4 py-3 text-sm outline-none focus:border-[#007dfc]">
+                    <option value="">Tất cả</option>
+                </select>
+            </div>
+        </section>
         
         <div id="gameGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <p class="text-gray-500 animate-pulse">Đang tải game từ Server...</p>
         </div>
+
+        <div id="pagination" class="mt-10 flex items-center justify-center gap-2 flex-wrap"></div>
     </main>
 
     <script>
         const API_URL = "http://localhost:5000/api";
         const token = localStorage.getItem('token');
+
+        const DEFAULT_LIMIT = 8;
+        const FILTER_DEBOUNCE_MS = 300;
         
         if(!token) window.location.href = 'login.html';
+
+        function formatVND(amount) {
+            const n = Number(amount) || 0;
+            return `${new Intl.NumberFormat('vi-VN').format(Math.round(n))} VNĐ`;
+        }
+
+        function getPageFromUrl() {
+            const params = new URLSearchParams(window.location.search);
+            const page = parseInt(params.get('page') || '1', 10);
+            return Number.isFinite(page) && page > 0 ? page : 1;
+        }
+
+        function setPageToUrl(page) {
+            const url = new URL(window.location.href);
+            url.searchParams.set('page', String(page));
+            window.history.replaceState({}, '', url.toString());
+        }
+
+        function getFiltersFromUrl() {
+            const params = new URLSearchParams(window.location.search);
+            const name = (params.get('name') || '').trim();
+            const category = (params.get('category') || '').trim();
+            return { name, category };
+        }
+
+        function setFiltersToUrl(filters) {
+            const url = new URL(window.location.href);
+            if (filters.name) url.searchParams.set('name', filters.name);
+            else url.searchParams.delete('name');
+            if (filters.category) url.searchParams.set('category', filters.category);
+            else url.searchParams.delete('category');
+            window.history.replaceState({}, '', url.toString());
+        }
+
+        function buildGamesQuery(page, filters) {
+            const params = new URLSearchParams();
+            params.set('page', String(page));
+            params.set('limit', String(DEFAULT_LIMIT));
+            if (filters && filters.name) params.set('name', filters.name);
+            if (filters && filters.category) params.set('category', filters.category);
+            return params.toString();
+        }
+
+        function renderPagination(pagination) {
+            const el = document.getElementById('pagination');
+            if (!pagination || !pagination.totalPages || pagination.totalPages <= 1) {
+                el.innerHTML = '';
+                return;
+            }
+
+            const { currentPage, totalPages } = pagination;
+
+            const mkBtn = (label, page, disabled = false, active = false) => {
+                const base = 'px-3 py-2 rounded text-sm font-bold border transition';
+                const cls = active
+                    ? `${base} bg-[#007dfc] border-[#007dfc] text-white`
+                    : `${base} bg-[#181818] border-gray-700 text-gray-200 hover:border-[#007dfc] hover:text-white`;
+                const dis = disabled ? ' opacity-40 cursor-not-allowed hover:border-gray-700 hover:text-gray-200' : '';
+                return `<button data-page="${page}" ${disabled ? 'disabled' : ''} class="${cls}${dis}">${label}</button>`;
+            };
+
+            // Hiển thị dạng: Prev | 1 ... 4 5 6 ... N | Next
+            const pages = [];
+            const push = (p) => pages.push(p);
+            const pushDots = () => pages.push('dots');
+
+            push(1);
+            const left = Math.max(2, currentPage - 1);
+            const right = Math.min(totalPages - 1, currentPage + 1);
+            if (left > 2) pushDots();
+            for (let p = left; p <= right; p++) push(p);
+            if (right < totalPages - 1) pushDots();
+            if (totalPages > 1) push(totalPages);
+
+            el.innerHTML = [
+                mkBtn('‹ Trước', currentPage - 1, currentPage <= 1),
+                ...pages.map(p => {
+                    if (p === 'dots') {
+                        return `<span class="px-2 text-gray-500 select-none">…</span>`;
+                    }
+                    return mkBtn(String(p), p, false, p === currentPage);
+                }),
+                mkBtn('Sau ›', currentPage + 1, currentPage >= totalPages)
+            ].join('');
+
+            el.querySelectorAll('button[data-page]').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const nextPage = parseInt(btn.getAttribute('data-page'), 10);
+                    if (!Number.isFinite(nextPage)) return;
+                    setPageToUrl(nextPage);
+                    await loadGames(nextPage);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                });
+            });
+        }
+
+        function renderGames(games) {
+            const grid = document.getElementById('gameGrid');
+
+            if (!Array.isArray(games)) {
+                grid.innerHTML = `<p class="text-red-500 font-bold border border-red-500 p-4 rounded">Lỗi Server: Không có dữ liệu</p>`;
+                return;
+            }
+
+            if (games.length === 0) {
+                grid.innerHTML = `<p class="text-yellow-500 font-bold">Kho game đang trống!</p>`;
+                return;
+            }
+
+            grid.innerHTML = games.map(game => {
+                let imgSrc = 'https://via.placeholder.com/600x338/202020/007dfc?text=TAIBABY-18+STORE';
+                
+                if (game.thumbnail) {
+                    imgSrc = game.thumbnail.startsWith('http') ? game.thumbnail : `${API_URL.replace('/api', '')}${game.thumbnail}`;
+                } else if (game.imageUrl) {
+                    imgSrc = game.imageUrl.startsWith('http') ? game.imageUrl : `${API_URL.replace('/api', '')}${game.imageUrl}`;
+                }
+
+                const price = game.price !== undefined ? game.price : 0;
+                const title = game.title || 'Game chưa có tên';
+
+                return `
+                <div class="epic-card p-4 rounded-lg flex flex-col group relative border border-gray-800 h-full">
+                    <a href="detail.html?id=${game._id}" class="flex flex-col flex-grow">
+                        <div class="w-full aspect-video bg-[#202020] rounded-md mb-4 overflow-hidden relative flex-shrink-0">
+                            <img src="${imgSrc}" onerror="this.src='https://via.placeholder.com/600x338/202020/007dfc?text=TAIBABY-18+STORE'" class="w-full h-full object-cover object-center group-hover:scale-105 transition duration-500">
+                        </div>
+                        
+                        <div class="flex flex-col flex-grow">
+                            <span class="text-[10px] text-gray-500 font-bold uppercase">Bản cơ bản</span>
+                            <h4 class="font-bold text-lg mt-1 group-hover:text-[#007dfc] transition line-clamp-2">${title}</h4>
+                        </div>
+                    </a>
+                    
+                    <div class="mt-auto pt-4">
+                        <p class="text-gray-300 font-bold">${formatVND(price)}</p>
+                    </div>
+                    
+                    <button onclick="buyNow('${game._id}')" class="mt-4 bg-[#007dfc] text-white py-3 rounded font-bold text-sm opacity-0 group-hover:opacity-100 transition absolute bottom-4 left-4 right-4 shadow-lg hover:bg-[#0062c4] z-10">
+                        MUA NGAY
+                    </button>
+                </div>
+                `;
+            }).join('');
+        }
+
+        async function loadGames(page) {
+            const grid = document.getElementById('gameGrid');
+            grid.innerHTML = `<p class="text-gray-500 animate-pulse">Đang tải game từ Server...</p>`;
+
+            const filters = getFiltersFromUrl();
+            const qs = buildGamesQuery(page, filters);
+            const gamesRes = await fetch(`${API_URL}/games?${qs}`);
+            const result = await gamesRes.json();
+
+            if (!result.success) {
+                grid.innerHTML = `<p class="text-red-500 font-bold border border-red-500 p-4 rounded">Lỗi Server: ${result.message || 'Không có dữ liệu'}</p>`;
+                document.getElementById('pagination').innerHTML = '';
+                return;
+            }
+
+            // Nếu user nhập page quá lớn, backend sẽ trả currentPage; sync lại URL cho đúng
+            if (result.pagination && result.pagination.currentPage && result.pagination.currentPage !== page) {
+                setPageToUrl(result.pagination.currentPage);
+            }
+
+            renderGames(result.data);
+            renderPagination(result.pagination);
+        }
+
+        async function loadCategories() {
+            const sel = document.getElementById('filterCategory');
+            try {
+                const res = await fetch(`${API_URL}/games/meta/categories`);
+                const result = await res.json();
+                if (!result.success || !Array.isArray(result.data)) return;
+
+                const current = (getFiltersFromUrl().category || '').trim();
+                const options = [
+                    `<option value="" ${current === '' ? 'selected' : ''}>Tất cả</option>`,
+                    ...result.data.map(c => `<option value="${c._id}" ${current === c._id ? 'selected' : ''}>${c.name}</option>`)
+                ];
+                sel.innerHTML = options.join('');
+            } catch (_) {
+                // ignore
+            }
+        }
+
+        function syncFilterControlsFromUrl() {
+            const { name, category } = getFiltersFromUrl();
+            const nameEl = document.getElementById('filterName');
+            const catEl = document.getElementById('filterCategory');
+            if (nameEl) nameEl.value = name;
+            if (catEl && category) catEl.value = category;
+        }
+
+        function attachFilterHandlers() {
+            const nameEl = document.getElementById('filterName');
+            const catEl = document.getElementById('filterCategory');
+
+            let t = null;
+            const apply = async (nextFilters) => {
+                setFiltersToUrl(nextFilters);
+                setPageToUrl(1);
+                await loadGames(1);
+            };
+
+            if (nameEl) {
+                nameEl.addEventListener('input', () => {
+                    if (t) window.clearTimeout(t);
+                    t = window.setTimeout(() => {
+                        const { category } = getFiltersFromUrl();
+                        apply({ name: nameEl.value.trim(), category });
+                    }, FILTER_DEBOUNCE_MS);
+                });
+            }
+
+            if (catEl) {
+                catEl.addEventListener('change', async () => {
+                    const { name } = getFiltersFromUrl();
+                    await apply({ name, category: catEl.value });
+                });
+            }
+        }
 
         async function init() {
             try {
@@ -70,85 +315,29 @@
                 if(profile.success) {
                     document.getElementById('userName').innerText = profile.data.username;
                     const balance = profile.data.walletBalance || 0;
-                    document.getElementById('userBalance').innerText = `$${balance.toFixed(2)}`;
+                    document.getElementById('userBalance').innerText = formatVND(balance);
                 } else {
                     logout(); return; 
                 }
 
-                // 2. Lấy danh sách Game
-                const gamesRes = await fetch(`${API_URL}/games`);
-                const result = await gamesRes.json();
-                const grid = document.getElementById('gameGrid');
-
-                if (!result.success || !result.data) {
-                    grid.innerHTML = `<p class="text-red-500 font-bold border border-red-500 p-4 rounded">Lỗi Server: ${result.message || 'Không có dữ liệu'}</p>`;
-                    return;
-                }
-
-                if (result.data.length === 0) {
-                    grid.innerHTML = `<p class="text-yellow-500 font-bold">Kho game đang trống!</p>`;
-                    return;
-                }
-
-                // 3. Render Game Grid (Đã fix Flexbox cực chuẩn)
-                grid.innerHTML = result.data.map(game => {
-                    let imgSrc = 'https://via.placeholder.com/600x338/202020/007dfc?text=TAIBABY-18+STORE';
-                    
-                    if (game.thumbnail) {
-                        imgSrc = game.thumbnail.startsWith('http') ? game.thumbnail : `${API_URL.replace('/api', '')}${game.thumbnail}`;
-                    } else if (game.imageUrl) {
-                        imgSrc = game.imageUrl.startsWith('http') ? game.imageUrl : `${API_URL.replace('/api', '')}${game.imageUrl}`;
-                    }
-
-                    const price = game.price !== undefined ? game.price : 0;
-                    const title = game.title || 'Game chưa có tên';
-
-                    return `
-                    <div class="epic-card p-4 rounded-lg flex flex-col group relative border border-gray-800 h-full">
-                        <a href="detail.html?id=${game._id}" class="flex flex-col flex-grow">
-                            <div class="w-full aspect-video bg-[#202020] rounded-md mb-4 overflow-hidden relative flex-shrink-0">
-                                <img src="${imgSrc}" onerror="this.src='https://via.placeholder.com/600x338/202020/007dfc?text=TAIBABY-18+STORE'" class="w-full h-full object-cover object-center group-hover:scale-105 transition duration-500">
-                            </div>
-                            
-                            <div class="flex flex-col flex-grow">
-                                <span class="text-[10px] text-gray-500 font-bold uppercase">Bản cơ bản</span>
-                                <h4 class="font-bold text-lg mt-1 group-hover:text-[#007dfc] transition line-clamp-2">${title}</h4>
-                            </div>
-                        </a>
-                        
-                        <div class="mt-auto pt-4">
-                            <p class="text-gray-300 font-bold">$${price}</p>
-                        </div>
-                        
-                        <button onclick="buyNow('${game._id}')" class="mt-4 bg-[#007dfc] text-white py-3 rounded font-bold text-sm opacity-0 group-hover:opacity-100 transition absolute bottom-4 left-4 right-4 shadow-lg hover:bg-[#0062c4] z-10">
-                            MUA NGAY
-                        </button>
-                    </div>
-                    `;
-                }).join('');
+                // 2. Lấy danh sách Game theo trang
+                const page = getPageFromUrl();
+                setPageToUrl(page);
+                syncFilterControlsFromUrl();
+                await loadCategories();
+                attachFilterHandlers();
+                await loadGames(page);
 
             } catch (err) {
                 console.error("Lỗi khi tải trang chủ:", err);
                 document.getElementById('gameGrid').innerHTML = `<p class="text-red-500 font-bold">Mất kết nối với Backend Server!</p>`;
+                document.getElementById('pagination').innerHTML = '';
             }
         }
 
         async function buyNow(gameId) {
-            try {
-                const res = await fetch(`${API_URL}/checkout`, {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify({ gameId })
-                });
-                const data = await res.json();
-                alert(data.message);
-                if (data.success) init(); 
-            } catch (err) {
-                alert("Lỗi kết nối server khi mua hàng!");
-            }
+            // Chuyển sang trang xác nhận thanh toán trước khi trừ tiền
+            window.location.href = `checkout-confirm.html?mode=single&gameId=${encodeURIComponent(gameId)}`;
         }
 
         function logout() {

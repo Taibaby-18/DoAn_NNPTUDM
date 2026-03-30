@@ -19,7 +19,8 @@
             <span class="text-xl font-black tracking-widest text-white">TAIBABY-18 STORE</span>
             <a href="index.html" class="text-gray-400 hover:text-white uppercase text-xs font-bold">Khám phá</a>
             <a href="cart.html" class="text-gray-400 hover:text-white uppercase text-xs font-bold">Giỏ hàng</a>
-            <a href="#" class="text-gray-400 hover:text-white uppercase text-xs font-bold">Thư viện</a>
+            <a href="library.html" class="text-gray-400 hover:text-white uppercase text-xs font-bold">Thư viện</a>
+            <a href="topup.html" class="text-gray-400 hover:text-white uppercase text-xs font-bold">Nạp ví</a>
         </div>
         <div class="flex items-center gap-6">
             <div class="text-right">
@@ -69,6 +70,10 @@
                             <span id="gamePub" class="font-bold text-right text-gray-300"></span>
                         </div>
                         <div class="flex justify-between border-b border-gray-800 pb-2">
+                            <span class="text-gray-500">Thể loại</span>
+                            <span id="gameCategory" class="font-bold text-right text-gray-300"></span>
+                        </div>
+                        <div class="flex justify-between border-b border-gray-800 pb-2">
                             <span class="text-gray-500">Nền tảng</span>
                             <span class="font-bold text-right text-gray-300">Windows (PC)</span>
                         </div>
@@ -89,6 +94,47 @@
 
         let currentGame = null;
 
+        function formatVND(amount) {
+            const n = Number(amount) || 0;
+            return `${new Intl.NumberFormat('vi-VN').format(Math.round(n))} VNĐ`;
+        }
+
+        function getVideoKind(url) {
+            if (!url || typeof url !== 'string') return { kind: 'unknown' };
+            const u = url.trim();
+            const lower = u.toLowerCase();
+            const isYouTube =
+                lower.includes('youtube.com/') ||
+                lower.includes('youtu.be/') ||
+                lower.includes('youtube-nocookie.com/');
+            if (isYouTube) return { kind: 'youtube' };
+            return { kind: 'file' };
+        }
+
+        function toYouTubeEmbedUrl(url) {
+            try {
+                const u = new URL(url);
+                const host = u.hostname.toLowerCase();
+                let id = '';
+                if (host.includes('youtu.be')) {
+                    id = u.pathname.replace('/', '');
+                } else {
+                    id = u.searchParams.get('v') || '';
+                }
+                if (!id) return '';
+                return `https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}?rel=0&modestbranding=1`;
+            } catch {
+                return '';
+            }
+        }
+
+        function guessVideoMime(url) {
+            const lower = String(url || '').toLowerCase();
+            if (lower.endsWith('.webm')) return 'video/webm';
+            if (lower.endsWith('.ogg') || lower.endsWith('.ogv')) return 'video/ogg';
+            return 'video/mp4';
+        }
+
         window.onload = async () => {
             loadUserProfile();
             await loadGameDetails();
@@ -102,7 +148,7 @@
                 if(profile.success) {
                     document.getElementById('userName').innerText = profile.data.username;
                     const balance = profile.data.walletBalance || 0;
-                    document.getElementById('userBalance').innerText = `$${balance.toFixed(2)}`;
+                    document.getElementById('userBalance').innerText = formatVND(balance);
                 }
             } catch (err) {}
         }
@@ -122,10 +168,20 @@
                 document.getElementById('gameDesc').innerText = currentGame.description || "Chưa có mô tả.";
                 document.getElementById('gamePC').innerText = currentGame.pcRequirements || "Đang cập nhật...";
                 const price = currentGame.price !== undefined ? currentGame.price : 0;
-                document.getElementById('gamePrice').innerText = `$${price}`;
+                document.getElementById('gamePrice').innerText = formatVND(price);
                 
-                // Vì đã bỏ populate, publisher đang là ID hoặc undefined, tạm để trống
-                document.getElementById('gamePub').innerText = "Kinetic Monolith";
+                // Publisher/Category: backend đã populate 'name' nếu có
+                const pubName =
+                    (currentGame.publisher && typeof currentGame.publisher === 'object' && currentGame.publisher.name) ||
+                    (typeof currentGame.publisher === 'string' ? currentGame.publisher : '') ||
+                    '';
+                const catName =
+                    (currentGame.category && typeof currentGame.category === 'object' && currentGame.category.name) ||
+                    (typeof currentGame.category === 'string' ? currentGame.category : '') ||
+                    '';
+
+                document.getElementById('gamePub').innerText = pubName || "Đang cập nhật...";
+                document.getElementById('gameCategory').innerText = catName || "Đang cập nhật...";
 
                 // --- XỬ LÝ ẢNH BÌA DỌC (THUMBNAIL) ---
                 let thumbSrc = 'https://via.placeholder.com/400x500/202020/007dfc?text=TAIBABY-18+STORE';
@@ -184,7 +240,18 @@
             const container = document.getElementById('mainMediaContainer');
             
             if(media.type === 'video') {
-                container.innerHTML = `<video controls autoplay class="w-full h-full object-cover bg-black"><source src="${media.url}" type="video/mp4"></video>`;
+                const info = getVideoKind(media.url);
+                if (info.kind === 'youtube') {
+                    const embed = toYouTubeEmbedUrl(media.url);
+                    if (embed) {
+                        container.innerHTML = `<iframe class="w-full h-full" src="${embed}" title="Trailer" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>`;
+                    } else {
+                        container.innerHTML = `<p class="text-red-400 font-bold p-4">Link trailer không hợp lệ.</p>`;
+                    }
+                } else {
+                    const mime = guessVideoMime(media.url);
+                    container.innerHTML = `<video controls playsinline class="w-full h-full object-cover bg-black"><source src="${media.url}" type="${mime}"></video>`;
+                }
             } else {
                 container.innerHTML = `<img src="${media.url}" onerror="this.src='https://via.placeholder.com/1280x720/202020/007dfc?text=TAIBABY-18+STORE'" class="w-full h-full object-cover bg-[#202020]">`;
             }
@@ -197,16 +264,8 @@
 
         // 4. Gọi API Mua & Thêm Giỏ hàng
         async function buyNow() {
-            try {
-                const res = await fetch(`${API_URL}/checkout`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                    body: JSON.stringify({ gameId })
-                });
-                const data = await res.json();
-                alert(data.message);
-                if(data.success) loadUserProfile();
-            } catch(e) { alert("Lỗi kết nối"); }
+            // Chuyển sang trang xác nhận thanh toán trước khi trừ tiền
+            window.location.href = `checkout-confirm.html?mode=single&gameId=${encodeURIComponent(gameId)}`;
         }
 
         async function addToCart() {

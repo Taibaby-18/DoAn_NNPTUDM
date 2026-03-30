@@ -1,5 +1,9 @@
 const mongoose = require('mongoose');
 
+// Đảm bảo các model được đăng ký trước khi populate theo ref name
+require('./Category');
+require('./Publisher');
+
 const gameSchema = new mongoose.Schema({
   title: { type: String, required: true },
   description: { type: String, required: true },

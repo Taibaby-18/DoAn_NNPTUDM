@@ -17,6 +17,7 @@
             <a href="index.html" class="text-gray-400 hover:text-white uppercase text-xs font-bold">Khám phá</a>
             <a href="cart.html" class="text-gray-400 hover:text-white uppercase text-xs font-bold">Giỏ hàng</a>
             <a href="library.html" class="text-white uppercase text-xs font-bold border-b-2 border-white pb-1">Thư viện</a>
+            <a href="topup.html" class="text-gray-400 hover:text-white uppercase text-xs font-bold">Nạp ví</a>
         </div>
         <div class="flex items-center gap-6">
             <div class="text-right">
@@ -43,6 +44,11 @@
         const token = localStorage.getItem('token');
         if(!token) window.location.href = 'login.html';
 
+        function formatVND(amount) {
+            const n = Number(amount) || 0;
+            return `${new Intl.NumberFormat('vi-VN').format(Math.round(n))} VNĐ`;
+        }
+
         async function init() {
             try {
                 // Lấy Profile (Bao gồm luôn cả mảng thư viện game)
@@ -56,7 +62,7 @@
                 const user = result.data;
                 document.getElementById('userName').innerText = user.username;
                 const balance = user.walletBalance || 0;
-                document.getElementById('userBalance').innerText = `$${balance.toFixed(2)}`;
+                document.getElementById('userBalance').innerText = formatVND(balance);
 
                 const library = user.library || []; // Mảng chứa các game đã mua
                 document.getElementById('gameCount').innerText = library.length;

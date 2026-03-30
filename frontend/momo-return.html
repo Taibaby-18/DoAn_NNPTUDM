@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Kết quả nạp MoMo | Taibaby-18 Store</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #121212; color: white; font-family: 'Inter', sans-serif; }
+        .card { background-color: #181818; border: 1px solid #333; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center px-4">
+    <div class="w-full max-w-md card rounded-xl p-8 shadow-2xl text-center">
+        <h1 class="text-2xl font-black uppercase tracking-widest mb-4">Kết quả nạp ví</h1>
+        <div id="statusIcon" class="text-6xl mb-4">⏳</div>
+        <p id="statusText" class="text-lg font-bold mb-2">Đang xác nhận giao dịch...</p>
+        <p id="detailText" class="text-sm text-gray-400 mb-6"></p>
+
+        <div class="text-left text-xs text-gray-500 mb-6 space-y-1">
+            <p><span class="font-semibold">orderId:</span> <span id="orderIdText">-</span></p>
+            <p><span class="font-semibold">resultCode:</span> <span id="resultCodeText">-</span></p>
+        </div>
+
+        <div class="flex gap-3 justify-center">
+            <a href="topup.html" class="px-4 py-2 rounded bg-[#007dfc] text-white text-xs font-bold uppercase tracking-widest hover:bg-[#0062c4]">Nạp tiếp</a>
+            <a href="index.html" class="px-4 py-2 rounded border border-gray-600 text-xs font-bold uppercase tracking-widest hover:border-white">Về cửa hàng</a>
+        </div>
+    </div>
+
+    <script>
+        // Trang này chỉ hiển thị kết quả từ query string:
+        // ?orderId=...&resultCode=0&status=success&message=...
+        const params = new URLSearchParams(window.location.search);
+
+        const orderId = params.get('orderId');
+        const resultCode = params.get('resultCode');
+        const status = params.get('status');
+        const message = params.get('message');
+
+        document.getElementById('orderIdText').innerText = orderId || '-';
+        document.getElementById('resultCodeText').innerText = resultCode ?? '-';
+
+        const statusIcon = document.getElementById('statusIcon');
+        const statusText = document.getElementById('statusText');
+        const detailText = document.getElementById('detailText');
+
+        if (!orderId) {
+            statusIcon.innerText = "⚠️";
+            statusText.innerText = "Thiếu thông tin giao dịch";
+            detailText.innerText = "Không tìm thấy orderId trong đường dẫn. Vui lòng thử lại thao tác nạp.";
+        } else if (status === 'success' || resultCode === '0') {
+            statusIcon.innerText = "✅";
+            statusText.innerText = "Nạp tiền thành công!";
+            detailText.innerText = "Số dư ví của bạn đã được cộng thêm. Hãy quay lại cửa hàng để tiếp tục mua game.";
+        } else {
+            statusIcon.innerText = "❌";
+            statusText.innerText = "Giao dịch thất bại";
+            detailText.innerText = message || "Thanh toán MoMo không thành công hoặc đã bị huỷ.";
+        }
+    </script>
+</body>
+</html>
+
