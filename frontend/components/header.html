@@ -1,0 +1,43 @@
+<!-- header.html -->
+<header class="bg-[#181818] border-b border-gray-800">
+    <div class="max-w-[1200px] mx-auto px-6 h-20 flex items-center justify-between">
+        <!-- Logo -->
+        <a href="/frontend/index.html" class="flex items-center gap-2 text-2xl font-black uppercase tracking-tighter hover:text-[#007dfc] transition">
+            <span class="text-[#007dfc]">TAIBABY</span> STORE
+        </a>
+        
+        <!-- Navigation -->
+        <nav class="hidden md:flex items-center gap-8 font-bold text-sm uppercase tracking-widest text-gray-300">
+            <a href="/frontend/index.html" class="hover:text-white transition">Cửa hàng</a>
+            <a href="/frontend/topup.html" class="hover:text-white transition">Nạp ví</a>
+            <a href="/frontend/User/library.html" class="hover:text-white transition">Thư viện Game</a>
+            <a href="/frontend/User/cart.html" class="hover:text-white transition">Giỏ hàng</a>
+        </nav>
+        
+        <!-- Auth / User -->
+        <div class="flex items-center gap-4">
+            <div id="userMenu" class="flex items-center gap-4 hidden">
+                <div class="text-right flex flex-col justify-center">
+                    <span id="userName" class="font-bold text-sm uppercase"></span>
+                    <span id="userBalance" class="text-xs text-[#00e676] font-bold"></span>
+                </div>
+                <button onclick="logout()" class="px-4 py-2 border border-gray-700 hover:border-red-500 hover:text-red-500 rounded text-xs font-bold uppercase transition">Thoát</button>
+            </div>
+            <a id="loginBtn" href="/frontend/login.html" class="bg-[#007dfc] hover:bg-[#0062c4] text-white px-6 py-2 rounded font-bold uppercase text-sm transition hidden">Đăng Nhập</a>
+        </div>
+    </div>
+</header>
+
+<script>
+    // Kiểm tra xem đã đăng nhập chưa
+    if (localStorage.getItem('token')) {
+        document.getElementById('userMenu').classList.remove('hidden');
+    } else {
+        document.getElementById('loginBtn').classList.remove('hidden');
+    }
+    
+    function logout() {
+        localStorage.removeItem('token');
+        window.location.href = '/frontend/login.html';
+    }
+</script>

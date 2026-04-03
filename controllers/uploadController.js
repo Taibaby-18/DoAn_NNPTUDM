@@ -1,26 +1,16 @@
 const MediaAsset = require('../models/MediaAsset');
-const path = require('path');
 
-exports.uploadMedia = async (req, res) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({ message: 'No file uploaded' });
-    }
-
-    const { entityId, entityModel, mediaType } = req.body;
-    const url = `/uploads/${req.file.filename}`;
-
+module.exports = {
+  // Upload media file
+  UploadMedia: async function (entityId, entityModel, mediaType, filePath) {
     const mediaAsset = new MediaAsset({
       entityId,
       entityModel,
-      url,
+      url: filePath,
       mediaType
     });
 
     await mediaAsset.save();
-    res.json({ message: 'File uploaded successfully', mediaAsset });
-  } catch (error) {
-    res.status(400).json({ message: error.message });
+    return mediaAsset;
   }
 };
-

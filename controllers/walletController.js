@@ -18,40 +18,31 @@ function buildOrderId(userId) {
   return `TOPUP_${userId}_${Date.now()}_${rand}`;
 }
 
-exports.createMoMoPayment = async (req, res) => {
-  try {
+module.exports = {
+  CreateMoMoPayment: async function (amountParam, userId, userEmail, username, redirectUrlParam, ipnUrlParam, baseUrl) {
     const partnerCode = mustGetEnv('MOMO_PARTNER_CODE');
     const accessKey = mustGetEnv('MOMO_ACCESS_KEY');
     const secretKey = mustGetEnv('MOMO_SECRET_KEY');
 
-    const amount = Number(req.body.amount);
+    const amount = Number(amountParam);
     if (!Number.isFinite(amount) || amount <= 0) {
-      return res.status(400).json({ success: false, message: 'amount không hợp lệ' });
+      throw new Error('amount không hợp lệ');
     }
 
-    // redirectUrl ưu tiên cấu hình/param để phù hợp localhost của bạn
-    const redirectUrl =
-      req.body.redirectUrl ||
-      process.env.MOMO_REDIRECT_URL ||
-      `${req.protocol}://${req.get('host')}/api/wallet/momo/return`;
+    const redirectUrl = redirectUrlParam || process.env.MOMO_REDIRECT_URL || `${baseUrl}/api/wallet/momo/return`;
+    const ipnUrl = ipnUrlParam || process.env.MOMO_IPN_URL || `${baseUrl}/api/wallet/momo/return`;
 
-    // Vì localhost không nhận IPN từ MoMo, để cùng 1 URL hoặc để trống tùy môi trường
-    const ipnUrl =
-      req.body.ipnUrl ||
-      process.env.MOMO_IPN_URL ||
-      `${req.protocol}://${req.get('host')}/api/wallet/momo/return`;
-
-    const orderId = buildOrderId(req.user._id.toString());
+    const orderId = buildOrderId(userId.toString());
     const requestId = orderId;
-    const orderInfo = `Nap vi (${req.user.email || req.user.username})`;
+    const orderInfo = `Nap vi (${userEmail || username})`;
     const requestType = "payWithMethod";
     const extraData = Buffer.from(
-      JSON.stringify({ userId: req.user._id.toString() }),
+      JSON.stringify({ userId: userId.toString() }),
       'utf8'
     ).toString('base64');
 
     await TopUpTransaction.create({
-      user: req.user._id,
+      user: userId,
       orderId,
       amount,
       paymentMethod: 'MoMo',
@@ -87,41 +78,28 @@ exports.createMoMoPayment = async (req, res) => {
       lang: 'vi'
     };
 
-    const momoRes = await axios.post(MOMO_CREATE_ENDPOINT, payload, {
-      headers: { 'Content-Type': 'application/json' },
-      timeout: 15000
-    });
+    try {
+      const momoRes = await axios.post(MOMO_CREATE_ENDPOINT, payload, {
+        headers: { 'Content-Type': 'application/json' },
+        timeout: 15000
+      });
 
-    return res.status(200).json({
-      success: true,
-      data: {
+      return {
         orderId,
         requestId,
         redirectUrl,
         momo: momoRes.data
-      }
-    });
-  } catch (err) {
-    return res.status(500).json({
-      success: false,
-      message: err?.response?.data?.message || err.message || 'MoMo create payment failed',
-      error: err?.response?.data || undefined
-    });
-  }
-};
+      };
+    } catch (err) {
+      throw new Error(err?.response?.data?.message || err.message || 'MoMo create payment failed');
+    }
+  },
 
-// MoMo redirect về (ưu tiên dùng cho localhost)
-exports.momoCallback = async (req, res) => {
-  const params = { ...(req.query || {}), ...(req.body || {}) };
-  const orderId = params.orderId;
-  const resultCode = Number(params.resultCode);
-  const message = params.message;
+  MomoCallback: async function (orderId, resultCode, message) {
+    if (!orderId) {
+      throw new Error('Thiếu orderId');
+    }
 
-  if (!orderId) {
-    return res.status(400).json({ success: false, message: 'Thiếu orderId' });
-  }
-
-  try {
     const session = await mongoose.startSession();
     let finalStatus = 'failed';
 
@@ -133,8 +111,6 @@ exports.momoCallback = async (req, res) => {
 
       if (resultCode === 0) {
         finalStatus = 'success';
-
-        // Idempotent: chỉ cộng tiền nếu đang pending
         const updated = await TopUpTransaction.findOneAndUpdate(
           { _id: tx._id, status: 'pending' },
           { $set: { status: 'success' } },
@@ -160,7 +136,6 @@ exports.momoCallback = async (req, res) => {
 
     session.endSession();
 
-    // Nếu bạn muốn MoMo redirect thẳng về 1 trang HTML frontend:
     const frontendReturn = process.env.MOMO_FRONTEND_RETURN_URL;
     if (frontendReturn) {
       const url = new URL(frontendReturn);
@@ -168,16 +143,13 @@ exports.momoCallback = async (req, res) => {
       url.searchParams.set('resultCode', String(resultCode));
       if (message) url.searchParams.set('message', String(message));
       url.searchParams.set('status', finalStatus);
-      return res.redirect(url.toString());
+      return { action: 'redirect', url: url.toString() };
     }
 
-    return res.status(200).json({
-      success: true,
-      message: 'Processed MoMo return',
-      data: { orderId, resultCode, status: finalStatus }
-    });
-  } catch (err) {
-    return res.status(500).json({ success: false, message: err.message || 'Callback failed' });
+    return { 
+      action: 'json', 
+      data: { orderId, resultCode, status: finalStatus },
+      message: 'Processed MoMo return'
+    };
   }
 };
-

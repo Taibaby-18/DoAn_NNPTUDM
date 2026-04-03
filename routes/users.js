@@ -1,14 +1,24 @@
-const express = require('express');
-const router = express.Router();
+var express = require("express");
+var router = express.Router();
 
-// 1. Nhập khẩu hàm bảo mật (Middleware)
-const { protect } = require('../middleware/auth'); 
+let { protect } = require('../middleware/auth'); 
+let userController = require('../controllers/User/userController'); 
 
-// 2. Nhập khẩu đúng tên hàm getUserProfile từ Controller
-const { getUserProfile } = require('../controllers/userController'); 
-
-// 3. Định tuyến (Đây chính là chỗ dòng số 7 hay bị lỗi nè)
-// Phải đảm bảo cả protect và getUserProfile đều ĐÃ CÓ MẶT thì nó mới không chửi
-router.get('/profile', protect, getUserProfile);
+// Gọi logic ngay tại Router theo đúng Teacher's Style
+router.get('/profile', protect, async function (req, res, next) {
+    try {
+        // Lấy ID từ token (req.user) truyền xuống hàm Controller (Service)
+        let result = await userController.GetUserProfile(req.user.id);
+        
+        if (result) {
+            res.send({ success: true, data: result });
+        } else {
+            res.status(404).send({ success: false, message: "Không tìm thấy người dùng" });
+        }
+    } catch (error) {
+        console.error("LỖI LẤY PROFILE:", error);
+        res.status(500).send({ success: false, message: "Lỗi server" });
+    }
+});
 
 module.exports = router;

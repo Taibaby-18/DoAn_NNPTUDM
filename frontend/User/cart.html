@@ -11,22 +11,7 @@
     </style>
 </head>
 <body>
-    <nav class="bg-[#181818] p-4 flex justify-between items-center px-12 sticky top-0 z-50 border-b border-gray-800">
-        <div class="flex items-center gap-8">
-            <span class="text-xl font-black tracking-widest text-white">TAIBABY-18 STORE</span>
-            <a href="index.html" class="text-gray-400 hover:text-white uppercase text-xs font-bold">Khám phá</a>
-            <a href="cart.html" class="text-white uppercase text-xs font-bold border-b-2 border-white pb-1">Giỏ hàng</a>
-            <a href="library.html" class="text-gray-400 hover:text-white uppercase text-xs font-bold">Thư viện</a>
-            <a href="topup.html" class="text-gray-400 hover:text-white uppercase text-xs font-bold">Nạp ví</a>
-        </div>
-        <div class="flex items-center gap-6">
-            <div class="text-right">
-                <p id="userName" class="text-sm font-bold uppercase">OPERATOR</p>
-                <p id="userBalance" class="text-[#007dfc] text-xs font-bold">$0.00</p>
-            </div>
-            <button onclick="logout()" class="bg-gray-800 px-3 py-1 text-xs rounded hover:bg-red-600 transition">Thoát</button>
-        </div>
-    </nav>
+    <div id="header-placeholder"></div>
 
     <main class="max-w-[1200px] mx-auto py-12 px-6 min-h-screen">
         <h1 class="text-3xl font-black italic mb-8 uppercase border-l-4 border-[#007dfc] pl-4">Giỏ hàng của bạn</h1>
@@ -70,7 +55,7 @@
     <script>
         const API_URL = "http://localhost:5000/api";
         const token = localStorage.getItem('token');
-        if(!token) window.location.href = 'login.html';
+        if(!token) window.location.href = '../login.html';
 
         function formatVND(amount) {
             const n = Number(amount) || 0;
@@ -93,9 +78,11 @@
                 });
                 const profile = await res.json();
                 if(profile.success) {
-                    document.getElementById('userName').innerText = profile.data.username;
+                    const userNameEl = document.getElementById('userName');
+                    if (userNameEl) userNameEl.innerText = profile.data.username;
                     const balance = profile.data.walletBalance || 0;
-                    document.getElementById('userBalance').innerText = formatVND(balance);
+                    const userBalanceEl = document.getElementById('userBalance');
+                    if (userBalanceEl) userBalanceEl.innerText = formatVND(balance);
                 } else {
                     logout();
                 }
@@ -138,7 +125,7 @@
                             </div>
                             <div class="flex-grow">
                                 <span class="text-[10px] text-gray-500 font-bold uppercase">Bản cơ bản</span>
-                                <h3 class="font-bold text-lg hover:text-[#007dfc] cursor-pointer transition"><a href="detail.html?id=${game._id}">${title}</a></h3>
+                                <h3 class="font-bold text-lg hover:text-[#007dfc] cursor-pointer transition"><a href="../detail.html?id=${game._id}">${title}</a></h3>
                                 <button onclick="removeFromCart('${game._id}')" class="text-xs text-gray-500 hover:text-red-500 mt-2 underline transition">Xóa khỏi giỏ</button>
                             </div>
                             <div class="text-2xl font-black text-white min-w-[100px] text-right">
@@ -154,7 +141,7 @@
                             <span class="material-symbols-outlined text-6xl text-gray-600 mb-4 block">shopping_cart</span>
                             <h2 class="text-xl font-bold mb-2">Giỏ hàng của bạn đang trống</h2>
                             <p class="text-gray-400 mb-6">Hãy dạo một vòng cửa hàng để tìm cho mình tựa game yêu thích nhé!</p>
-                            <a href="index.html" class="bg-[#007dfc] text-white px-8 py-3 rounded font-bold hover:bg-[#0062c4] transition uppercase text-sm">Đi tới Cửa hàng</a>
+                            <a href="../index.html" class="bg-[#007dfc] text-white px-8 py-3 rounded font-bold hover:bg-[#0062c4] transition uppercase text-sm">Đi tới Cửa hàng</a>
                         </div>
                     `;
                     document.getElementById('cartCount').innerText = '0';
@@ -197,7 +184,8 @@ async function removeFromCart(gameId) {
     }
 }
 
-        function logout() { localStorage.removeItem('token'); window.location.href = 'login.html'; }
-    </script>
+        function logout() { localStorage.removeItem('token'); window.location.href = '../login.html'; }
+        </script>
+        <script src="../layout.js"></script>
 </body>
 </html>

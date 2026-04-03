@@ -1,69 +1,59 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <title>Cửa hàng | Taibaby-18 Store</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { background-color: #121212; color: white; font-family: 'Inter', sans-serif; }
-        .epic-card { background-color: #181818; transition: 0.3s; }
-        .epic-card:hover { background-color: #252525; }
+        body {
+            background-color: #121212;
+            color: white;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .epic-card {
+            background-color: #181818;
+            transition: 0.3s;
+        }
+
+        .epic-card:hover {
+            background-color: #252525;
+        }
+
         /* Thêm style để giới hạn dòng text (Cứu cánh cho tên game quá dài) */
         .line-clamp-2 {
             display: -webkit-box;
             -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;  
+            -webkit-box-orient: vertical;
             overflow: hidden;
         }
     </style>
 </head>
-<body>
-    <nav class="bg-[#181818] p-4 flex justify-between items-center px-12 sticky top-0 z-50 border-b border-gray-800">
-        <div class="flex items-center gap-8">
-            <span class="text-xl font-black tracking-widest text-white">TAIBABY-18 STORE</span>
-            <a href="index.html" class="text-white uppercase text-xs font-bold border-b-2 border-white pb-1">Khám phá</a>
-            <a href="cart.html" class="text-gray-400 hover:text-white uppercase text-xs font-bold">Giỏ hàng</a>
-            <a href="library.html" class="text-gray-400 hover:text-white uppercase text-xs font-bold">Thư viện</a>
-            <a href="topup.html" class="text-gray-400 hover:text-white uppercase text-xs font-bold">Nạp ví</a>
-        </div>
-        <div class="flex items-center gap-6">
-            <div class="text-right">
-                <p id="userName" class="text-sm font-bold uppercase">OPERATOR</p>
-                <p id="userBalance" class="text-[#007dfc] text-xs font-bold">$0.00</p>
-            </div>
-            <button onclick="logout()" class="bg-gray-800 px-3 py-1 text-xs rounded hover:bg-red-600 transition">Thoát</button>
-        </div>
-    </nav>
 
-    <header class="p-12">
-        <div class="relative w-full h-[450px] rounded-xl overflow-hidden shadow-2xl">
-            <img src="https://images2.thanhnien.vn/528068263637045248/2024/6/7/black-myth-wukong-hd-scaled-1717771562622-1717771563466395313139.jpg" class="w-full h-full object-cover object-top">
-            <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent flex flex-col justify-end p-12">
-                <h2 class="text-5xl font-black italic">BLACK MYTH: WUKONG</h2>
-                <p class="max-w-md mt-4 text-gray-300">Tựa game hành động nhập vai đỉnh cao lấy cảm hứng từ Tây Du Ký.</p>
-                <button onclick="buyNow('69c8e019e26cea1d2a9768f3')" class="mt-6 bg-white text-black px-8 py-3 rounded font-black w-fit hover:bg-gray-200 uppercase transition">Mua ngay</button>
-            </div>
-        </div>
-    </header>
+<body>
+    <div id="header-placeholder"></div>
 
     <main class="px-12 pb-24">
         <h3 class="text-xl font-bold mb-8 uppercase tracking-widest border-l-4 border-[#007dfc] pl-3">Sản phẩm mới</h3>
 
         <section class="mb-8 grid grid-cols-1 md:grid-cols-3 gap-4">
             <div class="md:col-span-2">
-                <label for="filterName" class="block text-xs font-bold uppercase text-gray-400 mb-2">Tìm theo tên game</label>
+                <label for="filterName" class="block text-xs font-bold uppercase text-gray-400 mb-2">Tìm theo tên
+                    game</label>
                 <input id="filterName" type="text" placeholder="Nhập tên game..."
                     class="w-full bg-[#181818] border border-gray-800 rounded px-4 py-3 text-sm outline-none focus:border-[#007dfc]" />
             </div>
             <div>
-                <label for="filterCategory" class="block text-xs font-bold uppercase text-gray-400 mb-2">Category</label>
+                <label for="filterCategory"
+                    class="block text-xs font-bold uppercase text-gray-400 mb-2">Category</label>
                 <select id="filterCategory"
                     class="w-full bg-[#181818] border border-gray-800 rounded px-4 py-3 text-sm outline-none focus:border-[#007dfc]">
                     <option value="">Tất cả</option>
                 </select>
             </div>
         </section>
-        
+
         <div id="gameGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <p class="text-gray-500 animate-pulse">Đang tải game từ Server...</p>
         </div>
@@ -77,8 +67,8 @@
 
         const DEFAULT_LIMIT = 8;
         const FILTER_DEBOUNCE_MS = 300;
-        
-        if(!token) window.location.href = 'login.html';
+
+        if (!token) window.location.href = 'login.html';
 
         function formatVND(amount) {
             const n = Number(amount) || 0;
@@ -190,7 +180,7 @@
 
             grid.innerHTML = games.map(game => {
                 let imgSrc = 'https://via.placeholder.com/600x338/202020/007dfc?text=TAIBABY-18+STORE';
-                
+
                 if (game.thumbnail) {
                     imgSrc = game.thumbnail.startsWith('http') ? game.thumbnail : `${API_URL.replace('/api', '')}${game.thumbnail}`;
                 } else if (game.imageUrl) {
@@ -311,13 +301,16 @@
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 const profile = await profileRes.json();
-                
-                if(profile.success) {
-                    document.getElementById('userName').innerText = profile.data.username;
+
+                if (profile.success) {
+                    const userNameEl = document.getElementById('userName');
+                    if (userNameEl) userNameEl.innerText = profile.data.username;
+
                     const balance = profile.data.walletBalance || 0;
-                    document.getElementById('userBalance').innerText = formatVND(balance);
+                    const userBalanceEl = document.getElementById('userBalance');
+                    if (userBalanceEl) userBalanceEl.innerText = formatVND(balance);
                 } else {
-                    logout(); return; 
+                    logout(); return;
                 }
 
                 // 2. Lấy danh sách Game theo trang
@@ -337,7 +330,7 @@
 
         async function buyNow(gameId) {
             // Chuyển sang trang xác nhận thanh toán trước khi trừ tiền
-            window.location.href = `checkout-confirm.html?mode=single&gameId=${encodeURIComponent(gameId)}`;
+            window.location.href = `User/checkout-confirm.html?mode=single&gameId=${encodeURIComponent(gameId)}`;
         }
 
         function logout() {
@@ -347,5 +340,7 @@
 
         init();
     </script>
+    <script src="./layout.js"></script>
 </body>
+
 </html>

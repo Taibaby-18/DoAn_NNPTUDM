@@ -9,9 +9,10 @@
         .card { background-color: #181818; border: 1px solid #333; }
     </style>
 </head>
-<body class="min-h-screen flex flex-col items-center justify-center px-4">
-    <div class="w-full max-w-md card rounded-xl p-8 shadow-2xl text-center">
-        <h1 class="text-2xl font-black uppercase tracking-widest mb-4">Kết quả nạp ví</h1>
+<body>
+    <div class="min-h-screen flex flex-col items-center justify-center px-4">
+        <div class="w-full max-w-md card rounded-xl p-8 shadow-2xl text-center">
+            <h1 class="text-2xl font-black uppercase tracking-widest mb-4">Kết quả nạp ví</h1>
         <div id="statusIcon" class="text-6xl mb-4">⏳</div>
         <p id="statusText" class="text-lg font-bold mb-2">Đang xác nhận giao dịch...</p>
         <p id="detailText" class="text-sm text-gray-400 mb-6"></p>
@@ -57,7 +58,6 @@
             statusText.innerText = "Giao dịch thất bại";
             detailText.innerText = message || "Thanh toán MoMo không thành công hoặc đã bị huỷ.";
         }
-    </script>
+        </script>
 </body>
 </html>
-
