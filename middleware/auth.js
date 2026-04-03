@@ -8,6 +8,10 @@ const authMiddleware = async (req, res, next) => {
       return res.status(401).json({ message: 'No token, authorization denied' });
     }
 
+    if (!process.env.JWT_SECRET) {
+      return res.status(401).json({ message: 'Missing JWT_SECRET in .env file' });
+    }
+
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const user = await User.findById(decoded.id).populate('role');
     if (!user) {
