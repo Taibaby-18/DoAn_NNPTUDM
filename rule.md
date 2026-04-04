@@ -8,13 +8,12 @@
 - **Naming Convention:** - Tên file/controller/biến: `camelCase` (vd: `gameController.js`, `walletBalance`).
   - Tên Model/Class: `PascalCase` (vd: `User.js`, `TopUpTransaction.js`).
 
-## 2. KIẾN TRÚC ROUTER & ĐIỀU HƯỚNG (ROUTING & REDIRECTION)
-- **Tách bạch Route và Controller (Strict MVC):** Tuyệt đối KHÔNG viết logic nghiệp vụ (gọi Database, tính toán, gọi API bên thứ 3) trực tiếp bên trong các file ở thư mục `routes/`.
-  - Các file trong `routes/` CHỈ được phép làm 3 nhiệm vụ: Định nghĩa endpoint (GET/POST), gắn Middleware chặn cửa (verifyToken, checkRole), và gọi hàm Controller tương ứng.
-  - Vd chuẩn: `router.post('/pay', verifyToken, paymentController.createPayment);`
-  - Mọi logic xử lý BẮT BUỘC phải nằm gọn trong thư mục `controllers/`.
-- **Phân tách Frontend & Backend:** Backend chỉ đóng vai trò là API Server. Tuyệt đối KHÔNG render HTML từ Backend.
-- **Quy tắc Redirect (Điều hướng chéo):** Các route dùng làm Callback/Return URL từ bên thứ 3 (VNPay, MoMo, OAuth) BẮT BUỘC phải sử dụng lệnh `res.redirect(FRONTEND_URL)` (nằm trong Controller) để điều hướng người dùng về lại giao diện Frontend sau khi xử lý xong Database. Các tham số kết quả phải được gắn vào Query String.
+## 2. KIẾN TRÚC ROUTER & CONTROLLER (TEACHER'S STYLE - MANDATORY)
+- **Routing Style:** BẮT BUỘC tuân thủ cách viết code theo khuôn mẫu của Giảng viên. 
+  - ĐƯỢC PHÉP import trực tiếp Mongoose Model (vd: `userModel`) vào các file trong thư mục `routes/`.
+  - ĐƯỢC PHÉP thực thi các lệnh gọi Database (`.find()`, `.findByIdAndUpdate()`, v.v.) trực tiếp bên trong file Router.
+  - KHÔNG TỰ Ý refactor code hiện tại thành Strict MVC nếu không có yêu cầu.
+- **View Engine:** Giữ nguyên cấu hình `app.set('view engine', 'ejs')` và thư mục `views/` trong file gốc, không được phép xóa bỏ.
 ##  3. GIAO DỊCH CƠ SỞ DỮ LIỆU (DATABASE TRANSACTIONS) - [CRITICAL]
 Bắt buộc sử dụng session.withTransaction cho tất cả các API có tính chất thay đổi dữ liệu trên nhiều bảng (Collections) cùng một lúc. Đặc biệt là các tác vụ liên quan đến:
 
