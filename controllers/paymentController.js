@@ -4,13 +4,12 @@ const mongoose = require('mongoose');
 
 module.exports = {
 
-getBankQR: async function (req, res) {
-  try {
-    const userId = req.user._id || req.user.id;
-
+  GetBankQR: async function (userId) {
     const user = await User.findById(userId);
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      const error = new Error("User not found");
+      error.statusCode = 404;
+      throw error;
     }
 
     // 🔥 FIX QUAN TRỌNG
@@ -23,62 +22,57 @@ getBankQR: async function (req, res) {
 
     console.log("Deposit code:", code); // debug
 
-// 🔥 tìm transaction pending trước
-let transaction = await TopUpTransaction.findOne({
-  user: user._id,
-  status: 'pending'
-});
+    // 🔥 tìm transaction pending trước
+    let transaction = await TopUpTransaction.findOne({
+      user: user._id,
+      status: 'pending'
+    });
 
-// nếu chưa có thì tạo
-if (!transaction) {
-  transaction = await TopUpTransaction.create({
-    user: user._id,
-    code: code,
-    amount: 0,
-    status: 'pending'
-  });
-}
+    // nếu chưa có thì tạo
+    if (!transaction) {
+      transaction = await TopUpTransaction.create({
+        user: user._id,
+        code: code,
+        amount: 0,
+        status: 'pending'
+      });
+    }
 
     const qrUrl = `https://img.vietqr.io/image/MB-0389306604-compact.png?amount=0&addInfo=${code}&accountName=NGO%20MINH%20HAI`;
 
-    return res.json({
+    return {
       bank: "MB",
       accountNumber: "0389306604",
       accountName: "NGO MINH HAI",
       content: code,
       qrUrl
+    };
+  },
+
+  HandleSeepayWebhook: async function (content, amount) {
+    if (!content || !amount) {
+      const error = new Error("Thiếu dữ liệu");
+      error.statusCode = 400;
+      throw error;
+    }
+
+    const transaction = await TopUpTransaction.findOne({
+      code: content
     });
 
-  } catch (err) {
-    console.error("QR ERROR:", err); // 🔥 QUAN TRỌNG
-    res.status(500).json({ message: "Lỗi server" });
-  }
-},
+    if (!transaction) {
+      const error = new Error("Không tìm thấy giao dịch");
+      error.statusCode = 404;
+      throw error;
+    }
 
+    if (transaction.status === 'success') {
+      return { message: "Đã xử lý trước đó" };
+    }
 
+    const session = await mongoose.startSession();
 
-  handleSeepayWebhook: async function (req, res) {
     try {
-      const { content, amount } = req.body;
-
-      if (!content || !amount) {
-        return res.status(400).json({ message: "Thiếu dữ liệu" });
-      }
-
-      const transaction = await TopUpTransaction.findOne({
-        code: content
-      });
-
-      if (!transaction) {
-        return res.status(404).json({ message: "Không tìm thấy giao dịch" });
-      }
-
-      if (transaction.status === 'success') {
-        return res.json({ message: "Đã xử lý trước đó" });
-      }
-
-      const session = await mongoose.startSession();
-
       await session.withTransaction(async () => {
 
         const user = await User.findById(transaction.user).session(session);
@@ -93,18 +87,11 @@ if (!transaction) {
         await transaction.save({ session });
 
       });
-
+    } finally {
       session.endSession();
-
-      res.json({ success: true });
-
-    } catch (err) {
-      console.error(err);
-      res.status(500).json({ message: "Webhook lỗi" });
     }
+
+    return { success: true };
   }
-
-
-  
 
 };
