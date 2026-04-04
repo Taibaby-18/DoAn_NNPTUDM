@@ -34,9 +34,15 @@
 
             <p id="errorMsg" class="text-red-500 text-sm hidden"></p>
 
-            <button onclick="createMoMoPayment()" class="w-full epic-btn text-white font-bold py-4 rounded uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all">
-                Nạp qua VNPay
+            <button onclick="loadQR()" class="w-full epic-btn text-white font-bold py-4 rounded uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all">
+                Nạp qua ngân hàng (QR)
             </button>
+
+            <div id="qrBox" class="hidden mt-6 text-center space-y-4">
+                <p id="bankInfo"></p>
+                <p id="contentInfo" class="text-yellow-400 font-bold"></p>
+                <img id="qrImage" class="mx-auto rounded-lg border border-gray-700" width="250"/>
+            </div>
 
             <p class="text-gray-500 text-xs text-center">
                 Sau khi thanh toán xong, VNPay sẽ chuyển bạn về trang kết quả để xác nhận và cập nhật số dư ví.
@@ -123,6 +129,44 @@
             localStorage.removeItem('token');
             window.location.href = 'login.html';
         }
+
+        //tải qr
+        async function loadQR() {
+            const errorEl = document.getElementById('errorMsg');
+            errorEl.classList.add('hidden');
+
+            try {
+                const res = await fetch(`${API_URL}/wallet/topup/qr`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await res.json();
+
+                if (!data.qrUrl) {
+                    errorEl.innerText = "Không lấy được QR.";
+                    errorEl.classList.remove('hidden');
+                    return;
+                }
+
+                document.getElementById('qrBox').classList.remove('hidden');
+                document.getElementById('qrImage').src = data.qrUrl;
+
+                document.getElementById('bankInfo').innerText =
+                    `Ngân hàng: ${data.bank} | STK: ${data.accountNumber}`;
+
+                document.getElementById('contentInfo').innerText =
+                    `Nội dung: ${data.content}`;
+
+            } catch (err) {
+                console.error(err);
+                errorEl.innerText = "Lỗi tải QR.";
+                errorEl.classList.remove('hidden');
+            }
+        }
+
 
         init();
         </script>

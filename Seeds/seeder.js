@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
-const Game = require('./models/Game'); // Đường dẫn tới Model Game
+const Game = require('../models/Game'); // Đường dẫn tới Model Game
 
 // Load biến môi trường (chứa link kết nối DB của ông)
 dotenv.config();

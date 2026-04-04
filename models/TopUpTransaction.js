@@ -2,10 +2,27 @@ const mongoose = require('mongoose');
 
 const topUpTransactionSchema = new mongoose.Schema(
   {
-    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-    orderId: { type: String, required: true, unique: true, index: true }, // VNPay txnRef
-    amount: { type: Number, required: true, min: 1 },
-    paymentMethod: { type: String, default: 'VNPay' },
+    user: { 
+      type: mongoose.Schema.Types.ObjectId, 
+      ref: 'User', 
+      required: true 
+    },
+    code: { 
+      type: String, 
+      required: true, 
+      index: true 
+    },
+
+    amount: { 
+      type: Number, 
+      default: 0 
+    },
+
+    paymentMethod: { 
+      type: String, 
+      default: 'BANK_TRANSFER' 
+    },
+
     status: {
       type: String,
       enum: ['pending', 'success', 'failed'],

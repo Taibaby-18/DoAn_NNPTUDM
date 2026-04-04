@@ -26,11 +26,10 @@ app.use('/api/games', require('./routes/games'));
 app.use('/api/users', require('./routes/users'));
 app.use('/api/cart', require('./routes/cart'));
 app.use('/api/reviews', require('./routes/reviews'));
-app.use('/api/payment', require('./routes/payment'));
-// Add other routes here...
+//app.use('/api/payment', require('./routes/payment'));
+app.use('/api/wallet', require('./routes/wallet'));
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
-
