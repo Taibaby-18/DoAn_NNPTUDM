@@ -23,7 +23,7 @@ router.get('/', async function (req, res, next) {
 });
 
 // POST /api/games - create (protected)
-router.post('/', protect, authorize(['admin', 'publisher']), uploadGameMedia, async function (req, res, next) {
+router.post('/', protect, authorize(['Admin', 'Publisher']), uploadGameMedia, async function (req, res, next) {
   try {
     const { title, description, price, pcRequirements, category, publisher, trailerUrl } = req.body;
 
