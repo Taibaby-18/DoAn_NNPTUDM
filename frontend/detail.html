@@ -1,18 +1,38 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chi Tiết Game | Taibaby-18 Store</title>
+    <title>Chi tiết Game | Taibaby-18 Store</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { background-color: #121212; color: white; font-family: 'Inter', sans-serif; }
-        .epic-btn { background-color: #007dfc; transition: 0.3s; }
-        .epic-btn:hover { background-color: #0062c4; }
-        .gallery-thumb { cursor: pointer; opacity: 0.6; transition: 0.2s; }
-        .gallery-thumb:hover, .gallery-thumb.active { opacity: 1; border: 2px solid white; }
+        body {
+            background-color: #121212;
+            color: white;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .epic-btn {
+            background-color: #007dfc;
+        }
+        .epic-btn:hover {
+            background-color: #0062c4;
+        }
+        
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        
+        iframe {
+            border: none;
+        }
     </style>
 </head>
+
 <body>
     <div id="header-placeholder"></div>
 
@@ -21,33 +41,43 @@
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
             <div class="lg:col-span-2">
-                <div id="mainMediaContainer" class="w-full bg-[#202020] aspect-video rounded-lg overflow-hidden flex items-center justify-center mb-4">
+                <div id="mainMediaContainer"
+                    class="w-full bg-[#202020] aspect-video rounded-lg overflow-hidden flex items-center justify-center mb-4">
                     <p class="text-gray-500 animate-pulse">Đang nạp dữ liệu hình ảnh...</p>
                 </div>
 
                 <div id="galleryStrip" class="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
-                    </div>
+                </div>
 
                 <div class="mt-12 space-y-8">
                     <div>
-                        <h2 class="text-xl font-bold border-b border-gray-700 pb-2 mb-4 uppercase tracking-widest">Giới thiệu</h2>
+                        <h2 class="text-xl font-bold border-b border-gray-700 pb-2 mb-4 uppercase tracking-widest">Giới
+                            thiệu</h2>
                         <p id="gameDesc" class="text-gray-300 leading-relaxed text-sm whitespace-pre-wrap"></p>
                     </div>
                     <div>
-                        <h2 class="text-xl font-bold border-b border-gray-700 pb-2 mb-4 uppercase tracking-widest">Cấu hình PC yêu cầu</h2>
-                        <p id="gamePC" class="text-gray-300 text-sm bg-[#181818] p-4 rounded border border-gray-800"></p>
+                        <h2 class="text-xl font-bold border-b border-gray-700 pb-2 mb-4 uppercase tracking-widest">Cấu
+                            hình PC yêu cầu</h2>
+                        <p id="gamePC" class="text-gray-300 text-sm bg-[#181818] p-4 rounded border border-gray-800">
+                        </p>
                     </div>
                 </div>
             </div>
 
             <div class="lg:col-span-1">
                 <div class="sticky top-24">
-                    <img id="gameThumbnail" src="https://via.placeholder.com/400x500/202020/007dfc?text=TAIBABY-18+STORE" class="w-full rounded-lg shadow-xl mb-6 object-cover aspect-[3/4] border border-gray-800">
-                    
+                    <img id="gameThumbnail"
+                        src="https://via.placeholder.com/400x500/202020/007dfc?text=TAIBABY-18+STORE"
+                        class="w-full rounded-lg shadow-xl mb-6 object-cover aspect-[3/4] border border-gray-800">
+
                     <div class="text-3xl font-black mb-6" id="gamePrice">$0.00</div>
-                    
-                    <button onclick="buyNow()" class="w-full epic-btn text-white font-bold py-4 rounded mb-3 uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all">Mua Ngay</button>
-                    <button onclick="addToCart()" class="w-full border border-gray-600 hover:border-white text-white font-bold py-4 rounded transition uppercase tracking-widest text-sm hover:scale-[1.02] active:scale-95">Thêm Vào Giỏ</button>
+
+                    <button onclick="buyNow()"
+                        class="w-full epic-btn text-white font-bold py-4 rounded mb-3 uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all">Mua
+                        Ngay</button>
+                    <button onclick="addToCart()"
+                        class="w-full border border-gray-600 hover:border-white text-white font-bold py-4 rounded transition uppercase tracking-widest text-sm hover:scale-[1.02] active:scale-95">Thêm
+                        Vào Giỏ</button>
 
                     <div class="mt-8 space-y-3 text-sm border-t border-gray-800 pt-6">
                         <div class="flex justify-between border-b border-gray-800 pb-2">
@@ -74,8 +104,8 @@
         const urlParams = new URLSearchParams(window.location.search);
         const gameId = urlParams.get('id');
 
-        if(!token) window.location.href = 'login.html';
-        if(!gameId) { window.location.href = 'index.html'; }
+        if (!token) window.location.href = 'login.html';
+        if (!gameId) { window.location.href = 'index.html'; }
 
         let currentGame = null;
 
@@ -128,16 +158,16 @@
         // 1. Tải Profile
         async function loadUserProfile() {
             try {
-                const res = await fetch(`${API_URL}/users/profile`, { headers: { 'Authorization': `Bearer ${token}` }});
+                const res = await fetch(`${API_URL}/users/profile`, { headers: { 'Authorization': `Bearer ${token}` } });
                 const profile = await res.json();
-                if(profile.success) {
+                if (profile.success) {
                     const userNameEl = document.getElementById('userName');
                     if (userNameEl) userNameEl.innerText = profile.data.username;
                     const balance = profile.data.walletBalance || 0;
                     const userBalanceEl = document.getElementById('userBalance');
                     if (userBalanceEl) userBalanceEl.innerText = formatVND(balance);
                 }
-            } catch (err) {}
+            } catch (err) { }
         }
 
         // 2. Tải chi tiết Game & Xử lý Ảnh cực chuẩn
@@ -145,9 +175,9 @@
             try {
                 const res = await fetch(`${API_URL}/games/${gameId}`);
                 const result = await res.json();
-                
-                if(!result.success) throw new Error("Game không tồn tại");
-                
+
+                if (!result.success) throw new Error("Game không tồn tại");
+
                 currentGame = result.data;
 
                 // Điền thông tin Text
@@ -156,7 +186,7 @@
                 document.getElementById('gamePC').innerText = currentGame.pcRequirements || "Đang cập nhật...";
                 const price = currentGame.price !== undefined ? currentGame.price : 0;
                 document.getElementById('gamePrice').innerText = formatVND(price);
-                
+
                 // Publisher/Category: backend đã populate 'name' nếu có
                 const pubName =
                     (currentGame.publisher && typeof currentGame.publisher === 'object' && currentGame.publisher.name) ||
@@ -186,13 +216,13 @@
                 let mediaArray = [];
 
                 // Thêm Video nếu có
-                if(currentGame.trailerVideo) {
+                if (currentGame.trailerVideo) {
                     const vidUrl = currentGame.trailerVideo.startsWith('http') ? currentGame.trailerVideo : `${API_URL.replace('/api', '')}${currentGame.trailerVideo}`;
                     mediaArray.push({ type: 'video', url: vidUrl });
                 }
 
                 // Thêm ảnh Gallery nếu có
-                if(currentGame.gallery && currentGame.gallery.length > 0) {
+                if (currentGame.gallery && currentGame.gallery.length > 0) {
                     currentGame.gallery.forEach(img => {
                         const fullImgUrl = img.startsWith('http') ? img : `${API_URL.replace('/api', '')}${img}`;
                         mediaArray.push({ type: 'image', url: fullImgUrl });
@@ -203,7 +233,7 @@
                 }
 
                 // Render dải Thumbnail và Main Media
-                if(mediaArray.length > 0) {
+                if (mediaArray.length > 0) {
                     window.mediaData = mediaArray;
                     strip.innerHTML = mediaArray.map((media, index) => `
                         <div onclick="setMainMedia(${index})" class="gallery-thumb flex-shrink-0 w-32 h-20 bg-[#202020] rounded overflow-hidden relative border-2 ${index === 0 ? 'border-white opacity-100' : 'border-transparent'}">
@@ -211,7 +241,7 @@
                             <img src="${media.type === 'video' ? 'https://via.placeholder.com/150x80/202020/007dfc?text=TRAILER' : media.url}" class="w-full h-full object-cover">
                         </div>
                     `).join('');
-                    
+
                     setMainMedia(0);
                 }
 
@@ -225,8 +255,8 @@
         window.setMainMedia = (index) => {
             const media = window.mediaData[index];
             const container = document.getElementById('mainMediaContainer');
-            
-            if(media.type === 'video') {
+
+            if (media.type === 'video') {
                 const info = getVideoKind(media.url);
                 if (info.kind === 'youtube') {
                     const embed = toYouTubeEmbedUrl(media.url);
@@ -244,7 +274,7 @@
             }
 
             document.querySelectorAll('.gallery-thumb').forEach((el, i) => {
-                if(i === index) { el.classList.add('border-white', 'opacity-100'); el.classList.remove('border-transparent', 'opacity-60'); }
+                if (i === index) { el.classList.add('border-white', 'opacity-100'); el.classList.remove('border-transparent', 'opacity-60'); }
                 else { el.classList.remove('border-white', 'opacity-100'); el.classList.add('border-transparent', 'opacity-60'); }
             });
         };
@@ -264,11 +294,12 @@
                 });
                 const data = await res.json();
                 alert(data.message);
-            } catch(e) { alert("Lỗi kết nối"); }
+            } catch (e) { alert("Lỗi kết nối"); }
         }
 
         function logout() { localStorage.removeItem('token'); window.location.href = 'login.html'; }
-        </script>
-        <script src="./layout.js"></script>
+    </script>
+    <script src="./layout.js"></script>
 </body>
+
 </html>

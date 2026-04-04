@@ -116,10 +116,28 @@
             const profile = await res.json();
             if (!profile.success) throw new Error(profile.message || 'Không lấy được profile');
             const user = profile.data || {};
+            
+            // Check ownership
+            if (mode === 'single' && gameId && user.library) {
+                 const alreadyOwned = user.library.some(g => (g._id || g) === gameId);
+                 if (alreadyOwned) {
+                     alert("Bạn đã sở hữu game này rồi!");
+                     window.location.href = 'library.html';
+                     throw new Error("Game đã có trong thư viện."); 
+                 }
+            }
+
             const balance = user.walletBalance || 0;
-            document.getElementById('userName').innerText = user.username || 'OPERATOR';
-            document.getElementById('userBalance').innerText = formatVND(balance);
-            document.getElementById('balance').innerText = formatVND(balance);
+            
+            const userNameEl = document.getElementById('userName');
+            if (userNameEl) userNameEl.innerText = user.username || 'OPERATOR';
+            
+            const userBalanceEl = document.getElementById('userBalance');
+            if (userBalanceEl) userBalanceEl.innerText = formatVND(balance);
+            
+            const summaryBalanceEl = document.getElementById('balance');
+            if (summaryBalanceEl) summaryBalanceEl.innerText = formatVND(balance);
+            
             preview.balance = balance;
         }
 
@@ -243,7 +261,7 @@
 
                 let res;
                 if (preview.mode === 'single') {
-                    res = await fetch(`${API_URL}/checkout`, {
+                    res = await fetch(`${API_URL}/checkout/buy`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                         body: JSON.stringify({ gameId })
