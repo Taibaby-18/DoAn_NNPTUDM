@@ -2,7 +2,8 @@ const express = require('express');
 const router = express.Router();
 
 const { protect, adminMiddleware } = require('../middleware/auth');
-const adminController = require('../controllers/adminController');
+const adminController = require('../controllers/Admin/adminController');
+const categoryController = require('../controllers/Admin/categoryController');
 
 // GET /api/admin/users - Lấy danh sách tất cả người dùng
 router.get('/users', protect, adminMiddleware, async function (req, res, next) {
@@ -67,6 +68,65 @@ router.delete('/users/:id', protect, adminMiddleware, async function (req, res, 
       return res.status(404).json({ success: false, message: error.message });
     }
     res.status(500).json({ success: false, message: "Lỗi server khi xóa người dùng" });
+  }
+});
+
+
+// GET /api/admin/categories 
+router.get('/categories', protect, adminMiddleware, async function (req, res, next) {
+  try {
+    const categories = await categoryController.GetAllCategories();
+    res.status(200).json({ success: true, data: categories });
+  } catch (error) {
+    console.error("LỖI LẤY DANH SÁCH DANH MỤC:", error);
+    res.status(500).json({ success: false, message: "Lỗi server khi lấy danh sách danh mục" });
+  }
+});
+
+// POST /api/admin/categories 
+router.post('/categories', protect, adminMiddleware, async function (req, res, next) {
+  try {
+    const { name, description } = req.body;
+    const newCategory = await categoryController.CreateCategory(name, description);
+    res.status(201).json({ success: true, message: "Thêm danh mục thành công", data: newCategory });
+  } catch (error) {
+    console.error("LỖI THÊM DANH MỤC:", error);
+    if (error.message.includes('bắt buộc') || error.message.includes('tồn tại')) {
+      return res.status(400).json({ success: false, message: error.message });
+    }
+    res.status(500).json({ success: false, message: "Lỗi server khi thêm danh mục" });
+  }
+});
+
+// PUT /api/admin/categories/:id 
+router.put('/categories/:id', protect, adminMiddleware, async function (req, res, next) {
+  try {
+    const { name, description } = req.body;
+    const updatedCategory = await categoryController.UpdateCategory(req.params.id, name, description);
+    res.status(200).json({ success: true, message: "Cập nhật danh mục thành công", data: updatedCategory });
+  } catch (error) {
+    console.error("LỖI CẬP NHẬT DANH MỤC:", error);
+    if (error.message.includes('Không tìm thấy')) {
+      return res.status(404).json({ success: false, message: error.message });
+    }
+    if (error.message.includes('tồn tại')) {
+      return res.status(400).json({ success: false, message: error.message });
+    }
+    res.status(500).json({ success: false, message: "Lỗi server khi cập nhật danh mục" });
+  }
+});
+
+// DELETE /api/admin/categories/:id 
+router.delete('/categories/:id', protect, adminMiddleware, async function (req, res, next) {
+  try {
+    await categoryController.DeleteCategory(req.params.id);
+    res.status(200).json({ success: true, message: "Đã xóa danh mục thành công!" });
+  } catch (error) {
+    console.error("LỖI XÓA DANH MỤC:", error);
+    if (error.message === 'Không tìm thấy danh mục') {
+      return res.status(404).json({ success: false, message: error.message });
+    }
+    res.status(500).json({ success: false, message: "Lỗi server khi xóa danh mục" });
   }
 });
 
