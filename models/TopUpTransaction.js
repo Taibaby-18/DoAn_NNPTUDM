@@ -3,9 +3,9 @@ const mongoose = require('mongoose');
 const topUpTransactionSchema = new mongoose.Schema(
   {
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-    orderId: { type: String, required: true, unique: true, index: true }, // MoMo orderId
+    orderId: { type: String, required: true, unique: true, index: true }, // VNPay txnRef
     amount: { type: Number, required: true, min: 1 },
-    paymentMethod: { type: String, default: 'MoMo' },
+    paymentMethod: { type: String, default: 'VNPay' },
     status: {
       type: String,
       enum: ['pending', 'success', 'failed'],
@@ -17,4 +17,3 @@ const topUpTransactionSchema = new mongoose.Schema(
 );
 
 module.exports = mongoose.model('TopUpTransaction', topUpTransactionSchema);
-

@@ -35,11 +35,11 @@
             <p id="errorMsg" class="text-red-500 text-sm hidden"></p>
 
             <button onclick="createMoMoPayment()" class="w-full epic-btn text-white font-bold py-4 rounded uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all">
-                Nạp qua MoMo
+                Nạp qua VNPay
             </button>
 
             <p class="text-gray-500 text-xs text-center">
-                Sau khi quét mã/thanh toán xong, MoMo sẽ chuyển bạn về trang kết quả để xác nhận và cập nhật số dư ví.
+                Sau khi thanh toán xong, VNPay sẽ chuyển bạn về trang kết quả để xác nhận và cập nhật số dư ví.
             </p>
         </div>
     </main>
@@ -89,7 +89,7 @@
 
             try {
                 const body = { amount };
-                const res = await fetch(`${API_URL}/wallet/momo/create`, {
+                const res = await fetch(`${API_URL}/payment/create_payment_url`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -99,23 +99,22 @@
                 });
                 const data = await res.json();
                 if (!data.success) {
-                    errorEl.innerText = data.message || "Tạo giao dịch MoMo thất bại.";
+                    errorEl.innerText = data.message || "Tạo giao dịch VNPay thất bại.";
                     errorEl.classList.remove('hidden');
                     return;
                 }
 
-                const momo = data.data.momo || {};
-                const payUrl = momo.payUrl || momo.shortLink || momo.deeplink;
+                const payUrl = data.data; // Server returns vnpUrl as data
 
                 if (payUrl) {
                     window.location.href = payUrl;
                 } else {
-                    errorEl.innerText = "Không tìm thấy payUrl từ MoMo.";
+                    errorEl.innerText = "Không tìm thấy URL thanh toán VNPay.";
                     errorEl.classList.remove('hidden');
                 }
             } catch (err) {
                 console.error(err);
-                errorEl.innerText = "Lỗi kết nối server hoặc MoMo.";
+                errorEl.innerText = "Lỗi kết nối server hoặc VNPay.";
                 errorEl.classList.remove('hidden');
             }
         }
