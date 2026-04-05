@@ -1,6 +1,6 @@
 const Game = require('../models/Game');
 const Category = require('../models/Category');
-
+const User = require('../models/User');
 module.exports = {
   // 1. Cho Publisher: Tạo game (Model tự động set status là 'pending')
   CreateGame: async function (title, description, price, pcRequirements, category, publisher, thumbnail, gallery, trailerVideo) {
@@ -73,10 +73,23 @@ module.exports = {
   },
 
   // 5. Cho Publisher: Xem danh sách game của chính mình đăng (Cả duyệt và chưa duyệt)
-  GetMyGames: async function (publisherId) {
-    const games = await Game.find({ publisher: publisherId })
+  GetMyGames: async function (userId) {
+    // 1. Tìm User đó để lấy ra ID của Publisher mà họ quản lý
+    const user = await User.findById(userId);
+
+    if (!user || !user.publisherProfile) {
+      return { success: true, count: 0, data: [] };
+    }
+
+    // 2. Tìm game dựa trên ID của Publisher Profile (Ví dụ: PlayStation Studios)
+    const games = await Game.find({ publisher: user.publisherProfile })
       .populate('category', 'name')
       .sort({ createdAt: -1 });
-    return { success: true, count: games.length, data: games };
-  }
+
+    return {
+      success: true,
+      count: games.length,
+      data: games
+    };
+  },
 };

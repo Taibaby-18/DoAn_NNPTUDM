@@ -6,10 +6,13 @@ const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   walletBalance: { type: Number, default: 0 },
-  library: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Game' }], 
+  library: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Game' }],
   cart: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Game' }],
   role: { type: mongoose.Schema.Types.ObjectId, ref: 'Role', required: true },
-  depositCode: {type: String, unique: true}
+  depositCode: { type: String, unique: true },
+
+  publisherProfile: { type: mongoose.Schema.Types.ObjectId, ref: 'Publisher', default: null }
+
 }, { timestamps: true });
 
 function generateDepositCode() {
@@ -36,7 +39,5 @@ userSchema.pre('save', async function (next) {
 userSchema.methods.comparePassword = async function (candidatePassword) {
   return bcrypt.compare(candidatePassword, this.password);
 };
-
-
 
 module.exports = mongoose.model('User', userSchema);
