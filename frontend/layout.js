@@ -1,4 +1,39 @@
-// File: frontend/layout.js
+window.updateNavByRole = function(role) {
+    const navItemsContainer = document.querySelector('nav');
+    if (!navItemsContainer) return;
+    
+    let linksHTML = `
+        <a href="/frontend/index.html" class="hover:text-white transition">Cửa hàng</a>
+        <a href="/frontend/topup.html" class="hover:text-white transition">Nạp ví</a>
+        <a href="/frontend/User/library.html" class="hover:text-white transition">Thư viện Game</a>
+        <a href="/frontend/User/cart.html" class="hover:text-white transition">Giỏ hàng</a>
+    `;
+
+    if (role === 'Admin') {
+        linksHTML = `
+            <a href="/frontend/Admin/Dashboard.html" class="hover:text-white transition">Quản lý</a>
+            <a href="/frontend/index.html" class="hover:text-white transition">Cửa hàng</a>
+        `;
+    } else if (role === 'Publisher') {
+        linksHTML = `
+            <a href="/frontend/Publisher/Games.html" class="hover:text-white transition">Quản lý Game</a>
+            <a href="/frontend/index.html" class="hover:text-white transition">Cửa hàng</a>
+        `;
+    }
+    
+    navItemsContainer.innerHTML = linksHTML;
+    
+    const navLinks = navItemsContainer.querySelectorAll('a');
+    const currentPath = window.location.pathname;
+    navLinks.forEach(link => {
+        const href = link.getAttribute('href');
+        if (currentPath.includes(href) || (currentPath.endsWith('/') && href.includes('index.html'))) {
+            link.classList.remove('text-gray-300');
+            link.classList.add('text-white', 'border-b-2', 'border-[#007dfc]', 'pb-1');
+        }
+    });
+};
+
 document.addEventListener("DOMContentLoaded", function() {
     const headerPlaceholder = document.getElementById("header-placeholder");
     
@@ -43,16 +78,9 @@ document.addEventListener("DOMContentLoaded", function() {
                         }
                     });
                 }
-                // Active Link Logic
-                const currentPath = window.location.pathname;
-                const navLinks = headerPlaceholder.querySelectorAll('nav a');
-                navLinks.forEach(link => {
-                    const href = link.getAttribute('href');
-                    if (currentPath.includes(href) || (currentPath.endsWith('/') && href.includes('index.html'))) {
-                        link.classList.remove('text-gray-300');
-                        link.classList.add('text-white', 'border-b-2', 'border-[#007dfc]', 'pb-1');
-                    }
-                });
+                // Active Link Logic based on role
+                const role = localStorage.getItem('userRole') || 'Gamer';
+                window.updateNavByRole(role);
             })
             .catch(error => console.error("Lỗi nhúng Layout:", error));
     }
@@ -60,5 +88,6 @@ document.addEventListener("DOMContentLoaded", function() {
 
 window.logout = function() {
     localStorage.removeItem('token');
+    localStorage.removeItem('userRole');
     window.location.href = '/frontend/login.html';
 };

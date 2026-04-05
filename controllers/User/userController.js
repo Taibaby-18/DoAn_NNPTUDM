@@ -4,7 +4,7 @@ const Game = require('../../models/Game'); // Kéo model Game vào để populat
 module.exports = {
     // Viết hoa chữ cái đầu theo chuẩn của thầy
     GetUserProfile: async function (userId) {
-        let user = await User.findById(userId).populate('library');
+        let user = await User.findById(userId).populate('library').populate('role');
         return user;
     }
 }
