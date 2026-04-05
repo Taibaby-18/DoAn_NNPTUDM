@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 
 const paymentController = require('../controllers/paymentController');
-
+const TopUpTransaction = require('../models/TopUpTransaction');
 const { protect } = require('../middleware/auth');
 
 
@@ -64,21 +64,19 @@ router.post('/topup/cancel', protect, async (req, res) => {
   }
 });
 
-
-router.post('/topup/webhook', async (req, res) => {
+router.get('/topup/pending', protect, async (req, res) => {
   try {
-    const { content, amount } = req.body;
+    const transaction = await TopUpTransaction.findOne({
+      user: req.user._id,
+      status: 'pending',
+      expireAt: { $gt: new Date() }
+    });
 
-    const result = await paymentController.HandleSeepayWebhook(
-      content,
-      amount
-    );
-
-    res.json(result);
+    res.json(transaction);
   } catch (err) {
-    console.error("WEBHOOK ERROR:", err);
-    res.status(err.statusCode || 500).json({
-      message: err.message
+    console.error("PENDING ERROR:", err);
+    res.status(500).json({
+      message: "Lỗi lấy đơn pending"
     });
   }
 });

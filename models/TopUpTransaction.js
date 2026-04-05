@@ -7,11 +7,13 @@ const topUpTransactionSchema = new mongoose.Schema(
       ref: 'User', 
       required: true 
     },
+
     code: { 
       type: String, 
       required: true, 
       index: true 
     },
+
     orderId: {
       type: String,
       required: true,
@@ -32,6 +34,17 @@ const topUpTransactionSchema = new mongoose.Schema(
       type: String,
       enum: ['pending', 'success', 'failed'],
       default: 'pending',
+      index: true
+    },
+
+    qrImage: String,
+    bankName: String,
+    accountNumber: String,
+    accountName: String,
+    content: String,
+
+    expireAt: {
+      type: Date,
       index: true
     }
   },
