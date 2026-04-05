@@ -7,15 +7,8 @@ const generateOrderId = () => {
 
 module.exports = {
 
-<<<<<<< Updated upstream
-getBankQR: async function (req, res) {
-  try {
-    const userId = req.user._id || req.user.id;
-
-=======
   
   GetBankQR: async function (userId) {
->>>>>>> Stashed changes
     const user = await User.findById(userId);
 
     if (!user) {
@@ -27,28 +20,6 @@ getBankQR: async function (req, res) {
       error.statusCode = 500;
       throw error;
     }
-<<<<<<< Updated upstream
-
-    const code = user.depositCode;
-
-    console.log("Deposit code:", code); // debug
-
-// 🔥 tìm transaction pending trước
-let transaction = await TopUpTransaction.findOne({
-  user: user._id,
-  status: 'pending'
-});
-
-// nếu chưa có thì tạo
-if (!transaction) {
-  transaction = await TopUpTransaction.create({
-    user: user._id,
-    code: code,
-    amount: 0,
-    status: 'pending'
-  });
-}
-=======
       const existingPending = await TopUpTransaction.findOne({
         user: userId,
         status: 'pending'
@@ -71,7 +42,6 @@ if (!transaction) {
       amount: 0,
       status: 'pending'
     });
->>>>>>> Stashed changes
 
     const qrUrl = `https://img.vietqr.io/image/MB-0389306604-compact.png?amount=0&addInfo=${code}&accountName=NGO%20MINH%20HAI`;
 
@@ -81,9 +51,6 @@ if (!transaction) {
       accountName: "NGO MINH HAI",
       content: code,
       qrUrl
-<<<<<<< Updated upstream
-    });
-=======
     };
   },
   
@@ -105,7 +72,6 @@ if (!transaction) {
       code: content,
       status: 'pending'
     }).sort({ createdAt: -1 });
->>>>>>> Stashed changes
 
   } catch (err) {
     console.error("QR ERROR:", err); // 🔥 QUAN TRỌNG
@@ -113,60 +79,6 @@ if (!transaction) {
   }
 },
 
-<<<<<<< Updated upstream
-
-
-  handleSeepayWebhook: async function (req, res) {
-    try {
-      const { content, amount } = req.body;
-
-      if (!content || !amount) {
-        return res.status(400).json({ message: "Thiếu dữ liệu" });
-      }
-
-      const transaction = await TopUpTransaction.findOne({
-        code: content
-      });
-
-      if (!transaction) {
-        return res.status(404).json({ message: "Không tìm thấy giao dịch" });
-      }
-
-      if (transaction.status === 'success') {
-        return res.json({ message: "Đã xử lý trước đó" });
-      }
-
-      const session = await mongoose.startSession();
-
-      await session.withTransaction(async () => {
-
-        const user = await User.findById(transaction.user).session(session);
-
-        if (!user) throw new Error("User không tồn tại");
-
-        user.walletBalance += amount;
-        await user.save({ session });
-
-        transaction.amount = amount;
-        transaction.status = 'success';
-        await transaction.save({ session });
-
-      });
-
-      session.endSession();
-
-      res.json({ success: true });
-
-    } catch (err) {
-      console.error(err);
-      res.status(500).json({ message: "Webhook lỗi" });
-    }
-  }
-
-
-  
-
-=======
     const user = await User.findById(transaction.user);
 
     if (!user) {
@@ -212,5 +124,4 @@ if (!transaction) {
 
   return { success: true };
 }
->>>>>>> Stashed changes
 };
