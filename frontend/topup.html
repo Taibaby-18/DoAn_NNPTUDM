@@ -15,41 +15,79 @@
 <body>
     <div id="header-placeholder"></div>
 
-    <main class="max-w-[600px] mx-auto py-16 px-6">
-        <h1 class="text-3xl font-black italic mb-8 uppercase border-l-4 border-[#007dfc] pl-4">Nạp tiền vào ví</h1>
+<main class="max-w-[1400px] mx-auto py-10 md:py-16 px-4 md:px-6">
+    <h1 class="text-2xl md:text-3xl font-black italic mb-6 md:mb-8 uppercase border-l-4 border-[#007dfc] pl-4">
+        Nạp tiền vào ví
+    </h1>
 
-        <div class="bg-[#181818] p-8 rounded-lg border border-gray-800 shadow-xl space-y-6">
+    <!-- GRID RESPONSIVE -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
+
+        <!-- LEFT -->
+        <div class="lg:col-span-1 bg-[#181818] p-6 md:p-8 rounded-lg border border-gray-800 shadow-xl space-y-6">
+
             <div>
                 <p class="text-gray-400 text-sm mb-1">Số dư hiện tại</p>
-                <p id="currentBalance" class="text-3xl font-black text-[#00e676]">$0.00</p>
+                <p id="currentBalance" class="text-2xl md:text-3xl font-black text-[#00e676]">$0.00</p>
             </div>
 
             <div>
                 <label class="block text-sm text-gray-300 mb-2">Số tiền cần nạp (VNĐ)</label>
                 <input id="amount" type="number" min="1000" step="1000" value="50000"
-                       class="w-full epic-input p-4 rounded text-lg"
+                       class="w-full epic-input p-3 md:p-4 rounded text-base md:text-lg"
                        placeholder="Ví dụ: 50000">
-                <p class="text-xs text-gray-500 mt-1">Demo MoMo sandbox, nên ưu tiên số tròn: 50.000, 100.000,...</p>
+                <p class="text-xs text-gray-500 mt-1">
+                    Demo MoMo sandbox, nên ưu tiên số tròn: 50.000, 100.000,...
+                </p>
             </div>
 
             <p id="errorMsg" class="text-red-500 text-sm hidden"></p>
 
-            <button onclick="loadQR()" class="w-full epic-btn text-white font-bold py-4 rounded uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all">
+            <button onclick="loadQR()"
+                    class="w-full epic-btn text-white font-bold py-3 md:py-4 rounded uppercase tracking-widest text-sm md:text-base">
                 Nạp qua ngân hàng (QR)
             </button>
 
-            <div id="qrBox" class="hidden mt-6 text-center space-y-4">
-                <p id="bankInfo"></p>
-                <p id="contentInfo" class="text-yellow-400 font-bold"></p>
-                <img id="qrImage" class="mx-auto rounded-lg border border-gray-700" width="250"/>
+            <div id="qrBox" class="hidden mt-4 md:mt-6 text-center space-y-4">
+                <p id="bankInfo" class="text-sm"></p>
+                <p id="contentInfo" class="text-yellow-400 font-bold text-sm md:text-base"></p>
+                <img id="qrImage" class="mx-auto rounded-lg border border-gray-700 w-[200px] md:w-[250px]"/>
             </div>
 
             <p class="text-gray-500 text-xs text-center">
-                Sau khi thanh toán xong, VNPay sẽ chuyển bạn về trang kết quả để xác nhận và cập nhật số dư ví.
+                Sau khi thanh toán xong, hệ thống sẽ tự cập nhật số dư ví.
             </p>
         </div>
-    </main>
 
+        <!-- RIGHT -->
+        <div class="lg:col-span-2 bg-[#181818] p-4 md:p-6 rounded-lg border border-gray-800 shadow-xl">
+
+            <h2 class="text-lg md:text-xl font-bold mb-4">Lịch sử nạp tiền</h2>
+
+            <!-- SCROLL NGANG CHO MOBILE -->
+            <div class="overflow-x-auto">
+                <div class="overflow-y-auto max-h-[400px] md:max-h-[500px]">
+
+                    <table class="min-w-[700px] w-full text-sm table-auto">
+                        <thead>
+                            <tr class="text-gray-400 border-b border-gray-700">
+                                <th class="text-left py-2 whitespace-nowrap">Mã đơn</th>
+                                <th class="text-left whitespace-nowrap">Số tiền</th>
+                                <th class="text-left whitespace-nowrap">Trạng thái</th>
+                                <th class="text-left whitespace-nowrap">Thời gian</th>
+                                <th class="text-left whitespace-nowrap">Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyTable"></tbody>
+                    </table>
+
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</main>
     <script>
         const API_URL = "http://localhost:5000/api";
         const token = localStorage.getItem('token');
@@ -145,11 +183,11 @@
 
                 const data = await res.json();
 
-                if (!data.qrUrl) {
-                    errorEl.innerText = "Không lấy được QR.";
-                    errorEl.classList.remove('hidden');
-                    return;
-                }
+if (!res.ok) {
+    errorEl.innerText = data.message || "Có lỗi xảy ra";
+    errorEl.classList.remove('hidden');
+    return;
+}
 
                 document.getElementById('qrBox').classList.remove('hidden');
                 document.getElementById('qrImage').src = data.qrUrl;
@@ -159,6 +197,7 @@
 
                 document.getElementById('contentInfo').innerText =
                     `Nội dung: ${data.content}`;
+                    await loadHistory();
 
             } catch (err) {
                 console.error(err);
@@ -168,7 +207,84 @@
         }
 
 
+
+        async function loadHistory() {
+            try {
+                const res = await fetch(`${API_URL}/wallet/topup/history`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await res.json();
+
+                const table = document.getElementById('historyTable');
+                table.innerHTML = '';
+
+                data.forEach(item => {
+                    const statusText =
+                        item.status === 'success'
+                            ? '<span class="text-green-400">Thành công</span>'
+                            : item.status === 'failed'
+                                ? '<span class="text-red-400">Đã hủy</span>'
+                                : '<span class="text-yellow-400">Đang chờ</span>';
+
+                    const actionBtn =
+                        item.status === 'pending'
+                            ? `<button onclick="cancelOrder('${item.orderId}')" class="text-red-400 hover:underline">Hủy</button>`
+                            : '';
+
+                    const row = `
+                        <tr class="border-b border-gray-800">
+                            <td class="py-2 text-blue-400 font-mono">${item.orderId}</td>
+                            <td>${formatVND(item.amount)}</td>
+                            <td>${statusText}</td>
+                            <td>${new Date(item.createdAt).toLocaleString()}</td>
+                            <td>${actionBtn}</td>
+                        </tr>
+                    `;
+                    table.innerHTML += row;
+                });
+
+            } catch (err) {
+                console.error("Load history error:", err);
+            }
+        }
+
+
         init();
+        loadHistory();
+
+        async function cancelOrder(orderId) {
+            if (!confirm("Bạn có chắc muốn hủy đơn này?")) return;
+
+            try {
+                const res = await fetch(`${API_URL}/wallet/topup/cancel`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ orderId })
+                });
+
+                const data = await res.json();
+
+                if (!res.ok) {
+                    alert(data.message || "Hủy thất bại");
+                    return;
+                }
+
+                alert("Đã hủy đơn");
+
+                await loadHistory();
+
+            } catch (err) {
+                console.error(err);
+                alert("Lỗi khi hủy đơn");
+            }
+        }
+
         </script>
         <script src="./layout.js"></script>
 </body>
