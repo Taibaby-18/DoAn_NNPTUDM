@@ -28,6 +28,7 @@ app.use('/api/cart', require('./routes/cart'));
 app.use('/api/reviews', require('./routes/reviews'));
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/wallet', require('./routes/wallet'));
+app.use('/api/category', require('./routes/category'));
 // Add other routes here...
 
 const PORT = process.env.PORT || 5000;

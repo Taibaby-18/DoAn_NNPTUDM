@@ -241,7 +241,7 @@
         async function loadCategories() {
             const sel = document.getElementById('filterCategory');
             try {
-                const res = await fetch(`${API_URL}/games/meta/categories`);
+                const res = await fetch(`${API_URL}/category/active`);
                 const result = await res.json();
                 if (!result.success || !Array.isArray(result.data)) return;
 
