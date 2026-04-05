@@ -1,53 +1,70 @@
 const User = require('../models/User');
 const TopUpTransaction = require('../models/TopUpTransaction');
-const mongoose = require('mongoose');
+
+const generateOrderId = () => {
+  return 'ORDER_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+};
 
 module.exports = {
 
-  GetBankQR: async function (userId) {
-    const user = await User.findById(userId);
+  
+GetBankQR: async function (userId, amount) {
+      const user = await User.findById(userId);
+
     if (!user) {
       const error = new Error("User not found");
       error.statusCode = 404;
       throw error;
     }
 
-    // 🔥 FIX QUAN TRỌNG
     if (!user.depositCode) {
-      user.depositCode = "NAP_" + Math.random().toString(36).substring(2, 8).toUpperCase();
-      await user.save();
+      const error = new Error("User chưa có mã nạp tiền");
+      error.statusCode = 500;
+      throw error;
     }
 
-    const code = user.depositCode;
+    if (!amount || amount <= 0) {
+      const error = new Error("Số tiền không hợp lệ");
+      error.statusCode = 400;
+      throw error;
+    }
 
-    console.log("Deposit code:", code); // debug
-
-    // 🔥 tìm transaction pending trước
-    let transaction = await TopUpTransaction.findOne({
-      user: user._id,
-      status: 'pending'
-    });
-
-    // nếu chưa có thì tạo
-    if (!transaction) {
-      transaction = await TopUpTransaction.create({
-        user: user._id,
-        code: code,
-        amount: 0,
+      const existingPending = await TopUpTransaction.findOne({
+        user: userId,
         status: 'pending'
       });
-    }
 
-    const qrUrl = `https://img.vietqr.io/image/MB-0389306604-compact.png?amount=0&addInfo=${code}&accountName=NGO%20MINH%20HAI`;
+      if (existingPending) {
+        const error = new Error("Bạn đang có đơn chưa thanh toán, vui lòng hoàn tất hoặc hủy đơn trước khi tạo đơn mới");
+        error.statusCode = 400;
+        throw error;
+      }
+      
+
+    const code = user.depositCode;
+    const orderId = generateOrderId();
+
+const transaction = await TopUpTransaction.create({
+  user: user._id,
+  code: code,
+  orderId: orderId,
+  amount: amount,
+  status: 'pending'
+});
+
+    const qrUrl = `https://img.vietqr.io/image/MB-0389306604-compact.png?amount=${amount}&addInfo=${code}_${transaction._id}&accountName=NGO%20MINH%20HAI`;
 
     return {
       bank: "MB",
       accountNumber: "0389306604",
       accountName: "NGO MINH HAI",
       content: code,
-      qrUrl
+      qrUrl,
+      transactionId: transaction._id,
+      amount
     };
   },
+  
 
   HandleSeepayWebhook: async function (content, amount) {
     if (!content || !amount) {
@@ -56,9 +73,16 @@ module.exports = {
       throw error;
     }
 
+    if (amount <= 0) {
+      const error = new Error("Số tiền không hợp lệ");
+      error.statusCode = 400;
+      throw error;
+    }
+
     const transaction = await TopUpTransaction.findOne({
-      code: content
-    });
+      code: content,
+      status: 'pending'
+    }).sort({ createdAt: -1 });
 
     if (!transaction) {
       const error = new Error("Không tìm thấy giao dịch");
@@ -66,32 +90,49 @@ module.exports = {
       throw error;
     }
 
-    if (transaction.status === 'success') {
-      return { message: "Đã xử lý trước đó" };
+    const user = await User.findById(transaction.user);
+
+    if (!user) {
+      const error = new Error("User không tồn tại");
+      error.statusCode = 404;
+      throw error;
     }
 
-    const session = await mongoose.startSession();
+    user.walletBalance += amount;
+    await user.save();
 
-    try {
-      await session.withTransaction(async () => {
-
-        const user = await User.findById(transaction.user).session(session);
-
-        if (!user) throw new Error("User không tồn tại");
-
-        user.walletBalance += amount;
-        await user.save({ session });
-
-        transaction.amount = amount;
-        transaction.status = 'success';
-        await transaction.save({ session });
-
-      });
-    } finally {
-      session.endSession();
-    }
+    transaction.amount = amount;
+    transaction.status = 'success';
+    await transaction.save();
 
     return { success: true };
+  },
+
+  GetTopUpHistory: async function (userId) {
+    const transactions = await TopUpTransaction.find({
+      user: userId
+    })
+      .sort({ createdAt: -1 });
+
+    return transactions;
+  },
+
+  CancelTopUp: async function (userId, orderId) {
+  const transaction = await TopUpTransaction.findOne({
+    user: userId,
+    orderId: orderId,
+    status: 'pending'
+  });
+
+  if (!transaction) {
+    const error = new Error("Không tìm thấy đơn để hủy");
+    error.statusCode = 404;
+    throw error;
   }
 
+  transaction.status = 'failed'; 
+  await transaction.save();
+
+  return { success: true };
+}
 };

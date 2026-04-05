@@ -12,6 +12,11 @@ const topUpTransactionSchema = new mongoose.Schema(
       required: true, 
       index: true 
     },
+    orderId: {
+      type: String,
+      required: true,
+      unique: true
+    },
 
     amount: { 
       type: Number, 
