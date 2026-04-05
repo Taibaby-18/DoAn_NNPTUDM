@@ -11,7 +11,8 @@ window.updateNavByRole = function(role) {
 
     if (role === 'Admin') {
         linksHTML = `
-            <a href="/frontend/Admin/Dashboard.html" class="hover:text-white transition">Quản lý</a>
+            <a href="/frontend/Admin/Dashboard.html" class="hover:text-white transition">Người dùng</a>
+            <a href="/frontend/Admin/Categories.html" class="hover:text-white transition">Danh mục</a>
             <a href="/frontend/index.html" class="hover:text-white transition">Cửa hàng</a>
         `;
     } else if (role === 'Publisher') {

@@ -17,9 +17,13 @@ module.exports = {
       throw new Error('Role không hợp lệ. Chỉ chấp nhận: Admin, Publisher, Gamer');
     }
 
-    const user = await User.findById(userId);
+    const user = await User.findById(userId).populate('role', 'name');
     if (!user) {
       throw new Error('Không tìm thấy người dùng');
+    }
+
+    if (user.role && user.role.name === 'Admin') {
+      throw new Error('Không thể thay đổi quyền của tài khoản Admin');
     }
 
     user.role = role._id;
@@ -42,10 +46,17 @@ module.exports = {
 
  
   DeleteUser: async function (userId) {
-    const user = await User.findByIdAndDelete(userId);
+    // Populate role list to check if user is admin before deleting
+    const user = await User.findById(userId).populate('role', 'name');
     if (!user) {
       throw new Error('Không tìm thấy người dùng');
     }
+
+    if (user.role && user.role.name === 'Admin') {
+      throw new Error('Không thể xóa tài khoản Admin');
+    }
+
+    await User.findByIdAndDelete(userId);
     return true;
   }
 };
