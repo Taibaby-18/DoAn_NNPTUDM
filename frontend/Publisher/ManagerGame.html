@@ -375,7 +375,6 @@
 
         function populateCategorySelects() {
             const options = allCategories.map(c => `<option value="${c._id}">${c.name}</option>`).join('');
-            document.getElementById('createCategory').innerHTML = `<option value="">-- Chọn danh mục --</option>${options}`;
             document.getElementById('editCategory').innerHTML = `<option value="">-- Chọn danh mục --</option>${options}`;
         }
 
