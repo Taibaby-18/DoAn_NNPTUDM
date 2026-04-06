@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tạo Game Mới | Publisher | Taibaby-18 Store</title>
+    <meta name="description" content="Trang tạo game mới dành cho Publisher - Điền thông tin và upload game của bạn.">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: #0d0d0d;
+            color: white;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .form-input {
+            background: #121212;
+            border: 1px solid #2a2a2a;
+            color: white;
+            border-radius: 6px;
+            padding: 10px 12px;
+            width: 100%;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .form-input:focus {
+            border-color: #007dfc;
+        }
+
+        .form-input::placeholder {
+            color: #555;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #9ca3af;
+            margin-bottom: 6px;
+        }
+
+        /* Upload area */
+        .upload-area {
+            border: 2px dashed #2a2a2a;
+            border-radius: 8px;
+            transition: border-color 0.2s, background 0.2s;
+            cursor: pointer;
+            display: block;
+        }
+
+        .upload-area:hover,
+        .upload-area.dragover {
+            border-color: #007dfc;
+            background: rgba(0, 125, 252, 0.05);
+        }
+
+        /* Thumbnail preview */
+        #thumbnailPreview {
+            display: none;
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 1px solid #2a2a2a;
+            margin-top: 10px;
+        }
+
+        /* Section card */
+        .section-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            padding: 24px;
+        }
+
+        .section-title {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #007dfc;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-title::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: rgba(0, 125, 252, 0.2);
+        }
+
+        /* Status alert */
+        #statusMessage {
+            display: none;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #181818; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #007dfc; }
+
+        /* Gallery preview */
+        .gallery-preview-wrap {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .gallery-preview-wrap img {
+            width: 90px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 6px;
+            border: 1px solid #2a2a2a;
+        }
+
+        /* Trailer file name */
+        #trailerFileName {
+            font-size: 12px;
+            color: #9ca3af;
+            margin-top: 6px;
+            min-height: 18px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="header-placeholder"></div>
+
+    <main class="max-w-[860px] mx-auto px-6 pb-24 pt-10">
+
+        <!-- Page header -->
+        <div class="mb-8 flex items-center gap-4">
+            <a href="Games.html"
+                class="flex items-center justify-center w-9 h-9 rounded-lg border border-[#2a2a2a] hover:border-[#007dfc] text-gray-400 hover:text-[#007dfc] transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                </svg>
+            </a>
+            <div>
+                <h1 class="text-2xl font-black uppercase tracking-tight text-white border-l-4 border-[#007dfc] pl-4">
+                    Tạo Game Mới
+                </h1>
+                <p class="text-gray-500 text-sm mt-0.5 pl-5">Điền đầy đủ thông tin để gửi game lên duyệt</p>
+            </div>
+        </div>
+
+        <!-- Status message -->
+        <div id="statusMessage"
+            class="mb-6 px-4 py-3 rounded-lg font-bold text-sm border">
+        </div>
+
+        <form id="createGameForm" class="space-y-5" novalidate>
+
+            <!-- Basic info -->
+            <div class="section-card">
+                <div class="section-title">Thông tin cơ bản</div>
+                <div class="space-y-4">
+                    <div>
+                        <label class="form-label" for="createTitle">Tên game <span class="text-red-500">*</span></label>
+                        <input id="createTitle" type="text" class="form-input"
+                            placeholder="Ví dụ: The Last Journey" required>
+                    </div>
+
+                    <div>
+                        <label class="form-label" for="createDesc">Mô tả game <span class="text-red-500">*</span></label>
+                        <textarea id="createDesc" rows="5" class="form-input resize-none"
+                            placeholder="Nhập mô tả chi tiết về game của bạn..." required></textarea>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="form-label" for="createPrice">Giá (VNĐ) <span class="text-red-500">*</span></label>
+                            <input id="createPrice" type="number" min="0" class="form-input"
+                                placeholder="Ví dụ: 299000 — nhập 0 nếu miễn phí" required>
+                        </div>
+                        <div>
+                            <label class="form-label" for="createCategory">Danh mục <span class="text-red-500">*</span></label>
+                            <select id="createCategory" class="form-input" required>
+                                <option value="">-- Đang tải danh mục... --</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="form-label" for="createPcReq">Cấu hình PC yêu cầu</label>
+                        <textarea id="createPcReq" rows="4" class="form-input resize-none"
+                            placeholder="OS: Windows 10 64-bit&#10;CPU: Intel Core i5&#10;RAM: 8GB&#10;GPU: GTX 1060"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Media -->
+            <div class="section-card">
+                <div class="section-title">Ảnh & Media</div>
+                <div class="space-y-5">
+
+                    <!-- Thumbnail -->
+                    <div>
+                        <label class="form-label">Ảnh thumbnail <span class="text-red-500">*</span></label>
+                        <label for="createThumbnail"
+                            class="upload-area flex flex-col items-center justify-center p-8 text-gray-500">
+                            <svg class="w-10 h-10 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                            </svg>
+                            <span class="text-sm font-bold">Click hoặc kéo thả ảnh vào đây</span>
+                            <span class="text-xs mt-1">(JPG, PNG, WEBP — tỉ lệ 16:9 khuyến nghị)</span>
+                        </label>
+                        <input id="createThumbnail" type="file" accept="image/*" class="hidden"
+                            onchange="previewThumbnail(event)">
+                        <img id="thumbnailPreview" src="" alt="Thumbnail preview">
+                    </div>
+
+                    <!-- Gallery -->
+                    <div>
+                        <label class="form-label">Ảnh gallery <span class="text-gray-600 font-normal normal-case">(tùy chọn, nhiều ảnh)</span></label>
+                        <label for="createGallery"
+                            class="upload-area flex flex-col items-center justify-center p-6 text-gray-500">
+                            <svg class="w-8 h-8 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            <span class="text-sm font-bold">Click để chọn ảnh gallery</span>
+                            <span class="text-xs mt-1" id="galleryCount">(Chưa chọn file nào)</span>
+                        </label>
+                        <input id="createGallery" type="file" accept="image/*" multiple class="hidden"
+                            onchange="handleGalleryChange(event)">
+                        <div id="galleryPreviewWrap" class="gallery-preview-wrap"></div>
+                    </div>
+
+                    <!-- Trailer -->
+                    <div>
+                        <label class="form-label">Trailer <span class="text-gray-600 font-normal normal-case">(upload video hoặc nhập URL YouTube)</span></label>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <label for="createTrailerFile"
+                                    class="upload-area flex items-center justify-center gap-2 p-4 text-gray-500 text-sm font-bold">
+                                    <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                            d="M15 10l4.553-2.276A1 1 0 0121 8.723v6.554a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                    </svg>
+                                    <span id="trailerFileLabel">Upload file video</span>
+                                </label>
+                                <input id="createTrailerFile" type="file" accept="video/*" class="hidden"
+                                    onchange="handleTrailerFile(event)">
+                                <div id="trailerFileName"></div>
+                            </div>
+                            <div>
+                                <input id="createTrailerUrl" type="text" class="form-input h-full min-h-[50px]"
+                                    placeholder="Hoặc nhập URL YouTube...">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action buttons -->
+            <div class="flex items-center justify-between gap-4 pt-2">
+                <a href="Games.html"
+                    class="px-6 py-3 border border-[#2a2a2a] hover:border-gray-500 text-gray-400 hover:text-white rounded-lg font-bold uppercase text-sm transition">
+                    ← Quay lại
+                </a>
+                <button type="submit" id="createSubmitBtn"
+                    class="flex items-center gap-2 bg-[#007dfc] hover:bg-[#0062c4] text-white px-8 py-3 rounded-lg font-bold uppercase text-sm transition active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
+                    Tạo Game
+                </button>
+            </div>
+
+        </form>
+    </main>
+
+    <script>
+        const API_URL = "http://localhost:5000/api";
+        const token = localStorage.getItem('token');
+        const userRole = localStorage.getItem('userRole');
+
+        // Auth guard
+        if (!token) window.location.href = '/frontend/login.html';
+        if (userRole !== 'Publisher') {
+            alert("⚠️ Bạn không có quyền truy cập trang này!");
+            window.location.href = '/frontend/index.html';
+        }
+
+        // ========================= Utils =========================
+        function showStatus(msg, isError = false) {
+            const el = document.getElementById('statusMessage');
+            el.textContent = msg;
+            el.style.display = 'block';
+            el.className = 'mb-6 px-4 py-3 rounded-lg font-bold text-sm border';
+            if (isError) {
+                el.classList.add('bg-red-500/10', 'text-red-400', 'border-red-500/30');
+            } else {
+                el.classList.add('bg-green-500/10', 'text-green-400', 'border-green-500/30');
+            }
+            el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        // ========================= Load Categories =========================
+        async function loadCategories() {
+            try {
+                const res = await fetch(`${API_URL}/category`);
+                const result = await res.json();
+                if (result.success && result.data.length > 0) {
+                    const options = result.data.map(c => `<option value="${c._id}">${c.name}</option>`).join('');
+                    document.getElementById('createCategory').innerHTML =
+                        `<option value="">-- Chọn danh mục --</option>${options}`;
+                } else {
+                    document.getElementById('createCategory').innerHTML =
+                        `<option value="">-- Không có danh mục --</option>`;
+                }
+            } catch (e) {
+                console.error('Lỗi tải danh mục:', e);
+                document.getElementById('createCategory').innerHTML =
+                    `<option value="">-- Lỗi tải danh mục --</option>`;
+            }
+        }
+
+        // ========================= Thumbnail Preview =========================
+        function previewThumbnail(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const preview = document.getElementById('thumbnailPreview');
+            preview.src = URL.createObjectURL(file);
+            preview.style.display = 'block';
+        }
+
+        // ========================= Gallery Preview =========================
+        function handleGalleryChange(event) {
+            const files = Array.from(event.target.files);
+            document.getElementById('galleryCount').textContent =
+                files.length > 0 ? `(${files.length} ảnh đã chọn)` : '(Chưa chọn file nào)';
+
+            const wrap = document.getElementById('galleryPreviewWrap');
+            wrap.innerHTML = '';
+            files.forEach(file => {
+                const img = document.createElement('img');
+                img.src = URL.createObjectURL(file);
+                img.alt = file.name;
+                wrap.appendChild(img);
+            });
+        }
+
+        // ========================= Trailer File =========================
+        function handleTrailerFile(event) {
+            const file = event.target.files[0];
+            if (file) {
+                document.getElementById('trailerFileLabel').textContent = '✅ Đã chọn video';
+                document.getElementById('trailerFileName').textContent = file.name;
+                // Xóa URL nếu đã chọn file
+                document.getElementById('createTrailerUrl').value = '';
+            }
+        }
+
+        // ========================= Submit Form =========================
+        document.getElementById('createGameForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const title = document.getElementById('createTitle').value.trim();
+            const description = document.getElementById('createDesc').value.trim();
+            const price = document.getElementById('createPrice').value;
+            const category = document.getElementById('createCategory').value;
+            const thumbnail = document.getElementById('createThumbnail').files[0];
+
+            // Validate
+            if (!title) { showStatus('⚠ Vui lòng nhập tên game', true); return; }
+            if (!description) { showStatus('⚠ Vui lòng nhập mô tả game', true); return; }
+            if (price === '' || price < 0) { showStatus('⚠ Vui lòng nhập giá hợp lệ (nhập 0 nếu miễn phí)', true); return; }
+            if (!category) { showStatus('⚠ Vui lòng chọn danh mục', true); return; }
+            if (!thumbnail) { showStatus('⚠ Vui lòng upload ảnh thumbnail', true); return; }
+
+            const btn = document.getElementById('createSubmitBtn');
+            btn.disabled = true;
+            btn.innerHTML = `
+                <svg class="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+                </svg>
+                Đang tạo game...`;
+
+            try {
+                const formData = new FormData();
+                formData.append('title', title);
+                formData.append('description', description);
+                formData.append('price', price);
+                formData.append('category', category);
+                formData.append('pcRequirements', document.getElementById('createPcReq').value.trim());
+                formData.append('trailerUrl', document.getElementById('createTrailerUrl').value.trim());
+                formData.append('thumbnail', thumbnail);
+
+                const galleryFiles = document.getElementById('createGallery').files;
+                for (const file of galleryFiles) formData.append('gallery', file);
+
+                const trailerFile = document.getElementById('createTrailerFile').files[0];
+                if (trailerFile) formData.append('trailer', trailerFile);
+
+                const res = await fetch(`${API_URL}/games`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    body: formData
+                });
+                const result = await res.json();
+
+                if (result.success) {
+                    showStatus('🎉 Tạo game thành công! Đang chuyển hướng về danh sách...', false);
+                    setTimeout(() => {
+                        window.location.href = 'Games.html';
+                    }, 1800);
+                } else {
+                    showStatus(result.message || 'Lỗi tạo game', true);
+                    btn.disabled = false;
+                    btn.innerHTML = `
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        Tạo Game`;
+                }
+            } catch (err) {
+                console.error(err);
+                showStatus('⚠ Lỗi kết nối với server', true);
+                btn.disabled = false;
+                btn.innerHTML = `
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                    </svg>
+                    Tạo Game`;
+            }
+        });
+
+        // Init
+        loadCategories();
+    </script>
+
+    <script src="../layout.js"></script>
+</body>
+
+</html>

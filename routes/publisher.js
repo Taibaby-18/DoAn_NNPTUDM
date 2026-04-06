@@ -1,37 +1,26 @@
 const express = require('express');
-const gameController = require('../controllers/gameController');
+const router = express.Router();
 const publisherController = require('../controllers/Publisher/publisherController');
 const { protect, authorize } = require('../middleware/auth');
 const { uploadGameMedia } = require('../middleware/upload');
-const router = express.Router();
 
-router.get('/', async function (req, res, next) {
-  try {
-    const result = await gameController.GetAllGames(req.query.page, req.query.limit, req.query.name, req.query.category);
-    res.status(200).json(result);
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-});
-
-// ================= API DÀNH CHO PUBLISHER ================= //
-
+// GET /api/publisher/my-games - Xem danh sách game của chính mình
 router.get('/my-games', protect, authorize('Publisher'), async function (req, res, next) {
   try {
-    const publisherId = req.user._id || req.user.id;
-    const result = await publisherController.GetMyGames(publisherId);
+    const userId = req.user._id || req.user.id;
+    const result = await publisherController.GetMyGames(userId);
     res.status(200).json(result);
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 });
 
-router.post('/', protect, authorize('Publisher'), uploadGameMedia, async function (req, res, next) {
+// POST /api/publisher/games - Tạo game mới
+router.post('/games', protect, authorize('Publisher'), uploadGameMedia, async function (req, res, next) {
   try {
     const { title, description, price, pcRequirements, category, trailerUrl } = req.body;
     const userId = req.user._id || req.user.id;
 
-    // Lấy publisherProfile ID từ User (Game.publisher ref đến Publisher, không phải User)
     const User = require('../models/User');
     const user = await User.findById(userId).select('publisherProfile');
     if (!user || !user.publisherProfile) {
@@ -50,18 +39,18 @@ router.post('/', protect, authorize('Publisher'), uploadGameMedia, async functio
   }
 });
 
-// Cho Publisher: Chỉnh sửa game của chính mình
-router.put('/:id', protect, authorize('Publisher'), uploadGameMedia, async function (req, res, next) {
+// PUT /api/publisher/games/:id - Chỉnh sửa game của chính mình
+router.put('/games/:id', protect, authorize('Publisher'), uploadGameMedia, async function (req, res, next) {
   try {
     const { title, description, price, pcRequirements, category } = req.body;
-    const publisherId = req.user._id || req.user.id;
+    const userId = req.user._id || req.user.id;
 
     const fieldsToUpdate = {};
-    if (title)         fieldsToUpdate.title = title;
-    if (description)   fieldsToUpdate.description = description;
-    if (price !== undefined) fieldsToUpdate.price = price;
-    if (pcRequirements !== undefined) fieldsToUpdate.pcRequirements = pcRequirements;
-    if (category)      fieldsToUpdate.category = category;
+    if (title)                        fieldsToUpdate.title           = title;
+    if (description)                  fieldsToUpdate.description     = description;
+    if (price !== undefined)          fieldsToUpdate.price           = price;
+    if (pcRequirements !== undefined) fieldsToUpdate.pcRequirements  = pcRequirements;
+    if (category)                     fieldsToUpdate.category        = category;
     if (req.files && req.files['thumbnail']) {
       fieldsToUpdate.thumbnail = `/uploads/${req.files['thumbnail'][0].filename}`;
     }
@@ -72,24 +61,12 @@ router.put('/:id', protect, authorize('Publisher'), uploadGameMedia, async funct
       fieldsToUpdate.trailerVideo = `/uploads/${req.files['trailer'][0].filename}`;
     }
 
-    const result = await publisherController.UpdateGame(req.params.id, publisherId, fieldsToUpdate);
+    const result = await publisherController.UpdateGame(req.params.id, userId, fieldsToUpdate);
     res.status(200).json(result);
   } catch (error) {
     const status = error.message.includes('quyền') ? 403
                  : error.message === 'Game not found' ? 404 : 500;
     res.status(status).json({ success: false, message: error.message });
-  }
-});
-
-router.get('/:id', async function (req, res, next) {
-  try {
-    const result = await gameController.GetGameById(req.params.id);
-    res.status(200).json(result);
-  } catch (error) {
-    if (error.message === 'Game not found') {
-      return res.status(404).json({ success: false, message: error.message });
-    }
-    res.status(500).json({ success: false, message: error.message });
   }
 });
 

@@ -71,4 +71,42 @@ router.delete('/users/:id', protect, adminMiddleware, async function (req, res, 
 });
 
 
+// ================= QUẢN LÝ GAME ================= //
+
+// GET /api/admin/games - Lấy tất cả game (kể cả pending, rejected)
+router.get('/games', protect, adminMiddleware, async function (req, res, next) {
+  try {
+    const result = await adminController.GetAllGamesAdmin();
+    res.status(200).json(result);
+  } catch (error) {
+    console.error("LỖI LẤY TẤT CẢ GAME:", error);
+    res.status(500).json({ success: false, message: "Lỗi server khi lấy danh sách game" });
+  }
+});
+
+// PATCH /api/admin/games/:id/approve - Duyệt game
+router.patch('/games/:id/approve', protect, adminMiddleware, async function (req, res, next) {
+  try {
+    const result = await adminController.ApproveGame(req.params.id);
+    res.status(200).json({ success: true, message: "Đã duyệt game thành công!", data: result.data });
+  } catch (error) {
+    console.error("LỖI DUYỆT GAME:", error);
+    const status = error.message.includes('không tìm thấy') || error.message.includes('Không tìm thấy') ? 404 : 400;
+    res.status(status).json({ success: false, message: error.message });
+  }
+});
+
+// PATCH /api/admin/games/:id/reject - Từ chối game
+router.patch('/games/:id/reject', protect, adminMiddleware, async function (req, res, next) {
+  try {
+    const { reason } = req.body;
+    const result = await adminController.RejectGame(req.params.id, reason);
+    res.status(200).json({ success: true, message: "Đã từ chối game!", data: result.data });
+  } catch (error) {
+    console.error("LỖI TỪ CHỐI GAME:", error);
+    const status = error.message.includes('không tìm thấy') || error.message.includes('Không tìm thấy') ? 404 : 400;
+    res.status(status).json({ success: false, message: error.message });
+  }
+});
+
 module.exports = router;

@@ -1,5 +1,6 @@
 const User = require('../../models/User');
 const Role = require('../../models/Role');
+const Game = require('../../models/Game');
 
 module.exports = {
   
@@ -58,5 +59,39 @@ module.exports = {
 
     await User.findByIdAndDelete(userId);
     return true;
+  },
+
+  // ================= QUẢN LÝ GAME ================= //
+
+  // Lấy TẤT CẢ game (kể cả pending, rejected) — Admin xem toàn bộ
+  GetAllGamesAdmin: async function () {
+    const games = await Game.find()
+      .populate('publisher', 'name')
+      .populate('category', 'name')
+      .sort({ createdAt: -1 });
+    return { success: true, count: games.length, data: games };
+  },
+
+  // Duyệt game của Publisher
+  ApproveGame: async function (gameId) {
+    const game = await Game.findById(gameId);
+    if (!game) throw new Error('Không tìm thấy game');
+    if (game.status === 'approved') throw new Error('Game này đã được duyệt rồi');
+
+    game.status = 'approved';
+    await game.save();
+    return { success: true, data: game };
+  },
+
+  // Từ chối game của Publisher
+  RejectGame: async function (gameId, reason) {
+    const game = await Game.findById(gameId);
+    if (!game) throw new Error('Không tìm thấy game');
+    if (game.status === 'rejected') throw new Error('Game này đã bị từ chối rồi');
+
+    game.status = 'rejected';
+    if (reason) game.rejectionReason = reason;
+    await game.save();
+    return { success: true, data: game };
   }
 };

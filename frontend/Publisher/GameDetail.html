@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chi tiết Game | Publisher | Taibaby-18 Store</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: #0d0d0d;
+            color: white;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .epic-card {
+            background-color: #181818;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="header-placeholder"></div>
+
+    <main class="max-w-[1200px] mx-auto px-6 pb-24 pt-10">
+        <div class="mb-8 flex justify-between items-center">
+            <h1 class="text-3xl font-black uppercase tracking-tight text-white border-l-4 border-[#007dfc] pl-4">
+                Chi tiết Game
+            </h1>
+            <button onclick="window.history.back()" class="bg-[#242424] hover:bg-[#333] text-gray-300 border border-gray-700 px-4 py-2 flex items-center gap-2 rounded-lg transition font-bold text-sm uppercase">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                Quay lại
+            </button>
+        </div>
+
+        <div id="statusMessage" class="hidden mb-6 px-4 py-3 rounded-lg font-bold text-sm"></div>
+
+        <div id="gameDetailContainer" class="epic-card rounded-xl border border-gray-800 shadow-xl p-8">
+            <div class="text-center text-gray-500 animate-pulse font-bold py-10">
+                Đang tải chi tiết game...
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const API_URL = "http://localhost:5000/api";
+        const token = localStorage.getItem('token');
+        const userRole = localStorage.getItem('userRole');
+
+        if (!token) {
+            window.location.href = '../login.html';
+        }
+        if (userRole !== 'Publisher') {
+            alert("⚠️ Bạn không có quyền truy cập trang này!");
+            window.location.href = '../index.html';
+        }
+
+        function formatVND(amount) {
+            const n = Number(amount) || 0;
+            return `${new Intl.NumberFormat('vi-VN').format(Math.round(n))} VNĐ`;
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return 'N/A';
+            const d = new Date(dateStr);
+            return d.toLocaleString('vi-VN');
+        }
+
+        function getStatusBadge(status) {
+            const map = {
+                pending: { cls: 'bg-[rgba(255,171,0,0.15)] text-[#ffab00] border-[rgba(255,171,0,0.3)]', label: '⏳ Chờ duyệt' },
+                approved: { cls: 'bg-[rgba(0,230,118,0.15)] text-[#00e676] border-[rgba(0,230,118,0.3)]', label: '✅ Đã duyệt' },
+                rejected: { cls: 'bg-[rgba(255,82,82,0.15)] text-[#ff5252] border-[rgba(255,82,82,0.3)]', label: '❌ Từ chối' }
+            };
+            const s = map[status] || { cls: 'bg-gray-800 text-gray-400 border-gray-700', label: status };
+            return `<span class="inline-block px-2 py-0.5 rounded text-xs font-bold border ${s.cls}">${s.label}</span>`;
+        }
+
+        async function loadGameDetail() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const gameId = urlParams.get('id');
+
+            if (!gameId) {
+                document.getElementById('gameDetailContainer').innerHTML = '<div class="text-center text-red-500 font-bold py-10">Không tìm thấy ID game!</div>';
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_URL}/games/${gameId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const result = await res.json();
+
+                if (!result.success || !result.data) {
+                    document.getElementById('gameDetailContainer').innerHTML = `<div class="text-center text-red-500 font-bold py-10">${result.message || 'Lỗi tải chi tiết game'}</div>`;
+                    return;
+                }
+
+                // Since API_URL/users/profile might not return data.publisherProfile, let's simplify the check.
+                // The API /games/:id is public, so if it loaded successfully, we can render it.
+                // It's a publisher portal, so showing their own game logic is enough for now.
+
+                renderGameDetail(result.data);
+            } catch (error) {
+                console.error("Lỗi:", error);
+                document.getElementById('gameDetailContainer').innerHTML = `<div class="text-center text-red-500 font-bold py-10">Mất kết nối server</div>`;
+            }
+        }
+
+        function renderGameDetail(game) {
+            const container = document.getElementById('gameDetailContainer');
+            
+            const catName = (game.category && game.category.name) ? game.category.name : 'Unknown';
+            
+            let mainImage = 'https://via.placeholder.com/800x450?text=No+Image';
+            if (game.thumbnail) {
+                mainImage = game.thumbnail.startsWith('http') ? game.thumbnail : `http://localhost:5000${game.thumbnail}`;
+            }
+
+            let rejectionHtml = '';
+            if (game.status === 'rejected' && game.rejectionReason) {
+                rejectionHtml = `
+                    <div class="bg-red-500/10 border border-red-500/30 rounded-lg p-4 mb-6">
+                        <div class="font-bold text-red-500 mb-1 uppercase text-xs">Lý do từ chối từ Admin:</div>
+                        <div class="text-red-200 text-sm whitespace-pre-wrap">${game.rejectionReason}</div>
+                    </div>
+                `;
+            }
+
+            let imagesHtml = '';
+            if (game.gallery && game.gallery.length > 0) {
+                imagesHtml = `
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-4">
+                        ${game.gallery.map(img => {
+                            const url = img.startsWith('http') ? img : `http://localhost:5000${img}`;
+                            return `<img src="${url}" class="w-full aspect-video object-cover rounded-lg border border-gray-700" onerror="this.src='https://via.placeholder.com/150x80?text=Error'">`;
+                        }).join('')}
+                    </div>
+                `;
+            }
+
+            let requirementsHtml = '';
+            if (game.pcRequirements) {
+                 requirementsHtml = `
+                    <div class="mt-8 p-6 bg-[#121212] rounded-lg border border-gray-800">
+                        <h3 class="font-bold text-white mb-4 uppercase text-sm border-b border-gray-800 pb-2">Cấu hình PC</h3>
+                        <pre class="text-gray-300 text-sm leading-relaxed font-mono whitespace-pre-wrap">${game.pcRequirements}</pre>
+                    </div>
+                `;
+            }
+
+            container.innerHTML = `
+                ${rejectionHtml}
+                
+                <div class="mb-8 relative group">
+                    <img src="${mainImage}" alt="${game.title}" class="w-full aspect-video object-cover rounded-xl border border-[#1e1e1e] shadow-lg" onerror="this.src='https://via.placeholder.com/1200x675?text=Error'">
+                    <div class="absolute bottom-6 right-6 bg-black/80 backdrop-blur px-4 py-2 rounded text-white font-black text-xl border border-[#2a2a2a]">
+                        ${game.price === 0 ? '<span class="text-[#00e676]">MIỄN PHÍ</span>' : `<span class="text-[#007dfc]">${formatVND(game.price)}</span>`}
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-[150px_1fr] gap-y-4 gap-x-6 text-sm">
+                    <div class="font-bold text-gray-400 flex items-center">Trạng thái:</div>
+                    <div class="flex items-center">${getStatusBadge(game.status)}</div>
+
+                    <div class="font-bold text-gray-400">Tên Game:</div>
+                    <div class="font-black text-white text-2xl">${game.title}</div>
+
+                    <div class="font-bold text-gray-400">Thể loại:</div>
+                    <div class="text-gray-300 font-bold">${catName}</div>
+
+                    <div class="font-bold text-gray-400">Ngày tạo:</div>
+                    <div class="text-gray-300">${formatDate(game.createdAt)}</div>
+                    
+                    <div class="font-bold text-gray-400">Cập nhật lần cuối:</div>
+                    <div class="text-gray-300">${formatDate(game.updatedAt)}</div>
+                </div>
+
+                <div class="mt-8 pt-6 border-t border-gray-800">
+                    <div class="font-bold text-white mb-3 uppercase text-sm">Mô tả:</div>
+                    <p class="text-gray-300 leading-relaxed text-sm whitespace-pre-line">${game.description || 'Không có mô tả'}</p>
+                </div>
+
+                ${imagesHtml}
+                ${requirementsHtml}
+            `;
+        }
+
+        loadGameDetail();
+    </script>
+    <script src="../layout.js"></script>
+</body>
+
+</html>

@@ -1,6 +1,6 @@
 const express = require('express');
 const { protect } = require('../middleware/auth');
-const reviewController = require('../controllers/reviewController');
+const reviewController = require('../controllers/User/reviewController');
 const router = express.Router();
 
 router.post('/', protect, async function (req, res, next) {

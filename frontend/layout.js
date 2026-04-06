@@ -1,7 +1,7 @@
-window.updateNavByRole = function(role) {
+window.updateNavByRole = function (role) {
     const navItemsContainer = document.querySelector('nav');
     if (!navItemsContainer) return;
-    
+
     let linksHTML = `
         <a href="/index.html" class="hover:text-white transition">Cửa hàng</a>
         <a href="/topup.html" class="hover:text-white transition">Nạp ví</a>
@@ -13,17 +13,18 @@ window.updateNavByRole = function(role) {
         linksHTML = `
             <a href="/Admin/Dashboard.html" class="hover:text-white transition">Người dùng</a>
             <a href="/Admin/Categories.html" class="hover:text-white transition">Danh mục</a>
+            <a href="/Admin/AppoveGames.html" class="hover:text-white transition">Duyệt Game</a>
             <a href="/index.html" class="hover:text-white transition">Cửa hàng</a>
         `;
     } else if (role === 'Publisher') {
         linksHTML = `
-            <a href="/Publisher/Games.html" class="hover:text-white transition">Quản lý Game</a>
+            <a href="/Publisher/ManagerGame.html" class="hover:text-white transition">Quản lý Game</a>
             <a href="/index.html" class="hover:text-white transition">Cửa hàng</a>
         `;
     }
-    
+
     navItemsContainer.innerHTML = linksHTML;
-    
+
     const navLinks = navItemsContainer.querySelectorAll('a');
     const currentPath = window.location.pathname;
 
@@ -41,44 +42,65 @@ window.updateNavByRole = function(role) {
     });
 };
 
-document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener("DOMContentLoaded", function () {
     const headerPlaceholder = document.getElementById("header-placeholder");
-    
+
     if (headerPlaceholder) {
         // Luôn luôn xuất phát từ /frontend/ để không bao giờ lạc đường
-        fetch("/components/header.html")
+        // Dùng đường dẫn tương đối để tương thích với Express (port 5000) và Live Server (port 5500)
+        const headerPath = window.location.port === '5500'
+            ? '/frontend/components/header.html'
+            : '/components/header.html';
+        fetch(headerPath)
             .then(response => {
                 if (!response.ok) throw new Error("Không tải được Header");
                 return response.text();
             })
             .then(data => {
                 headerPlaceholder.innerHTML = data;
-                
+
                 // --- Khởi tạo Header Logic ---
                 const userMenu = document.getElementById('userMenu');
                 const loginBtn = document.getElementById('loginBtn');
-                
+
                 if (localStorage.getItem('token')) {
                     if (userMenu) {
                         userMenu.classList.remove('hidden');
                         userMenu.classList.add('flex');
+
+                        // Fetch thông tin user để hiển thị tên và số dư
+                        fetch('/api/users/profile', {
+                            headers: {
+                                'Authorization': `Bearer ${localStorage.getItem('token')}`
+                            }
+                        })
+                            .then(res => res.json())
+                            .then(data => {
+                                if (data.success) {
+                                    const userNameEl = document.getElementById('userName');
+                                    const userBalanceEl = document.getElementById('userBalance');
+                                    if (userNameEl) userNameEl.textContent = data.data.username;
+                                    if (userBalanceEl) userBalanceEl.textContent = data.data.walletBalance.toLocaleString('vi-VN') + ' VNĐ';
+                                }
+                            })
+                            .catch(err => console.error("Lỗi khi tải thông tin user:", err));
                     }
                 } else {
                     if (loginBtn) {
                         loginBtn.classList.remove('hidden');
                     }
                 }
-                
+
                 // Dropdown logic
                 const userDropdownBtn = document.getElementById('userDropdownBtn');
                 const userDropdown = document.getElementById('userDropdown');
-                
+
                 if (userDropdownBtn && userDropdown) {
                     userDropdownBtn.addEventListener('click', (e) => {
                         e.stopPropagation();
                         userDropdown.classList.toggle('hidden');
                     });
-                    
+
                     document.addEventListener('click', (e) => {
                         if (userMenu && !userMenu.contains(e.target)) {
                             userDropdown.classList.add('hidden');
@@ -93,8 +115,8 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 });
 
-window.logout = function() {
+window.logout = function () {
     localStorage.removeItem('token');
     localStorage.removeItem('userRole');
-    window.location.href = '/frontend/login.html';
+    window.location.href = '/login.html';
 };
