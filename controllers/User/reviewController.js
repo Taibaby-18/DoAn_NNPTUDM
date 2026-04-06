@@ -1,6 +1,6 @@
-const Review = require('../models/Review');
-const User = require('../models/User');
-const Game = require('../models/Game');
+const Review = require('../../models/Review');
+const User = require('../../models/User');
+const Game = require('../../models/Game');
 
 module.exports = {
   // Add new review

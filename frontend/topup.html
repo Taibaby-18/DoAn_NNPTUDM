@@ -15,41 +15,103 @@
 <body>
     <div id="header-placeholder"></div>
 
-    <main class="max-w-[600px] mx-auto py-16 px-6">
-        <h1 class="text-3xl font-black italic mb-8 uppercase border-l-4 border-[#007dfc] pl-4">Nạp tiền vào ví</h1>
+<main class="max-w-[1400px] mx-auto py-10 md:py-16 px-4 md:px-6">
+    <h1 class="text-2xl md:text-3xl font-black italic mb-6 md:mb-8 uppercase border-l-4 border-[#007dfc] pl-4">
+        Nạp tiền vào ví
+    </h1>
 
-        <div class="bg-[#181818] p-8 rounded-lg border border-gray-800 shadow-xl space-y-6">
-            <div>
-                <p class="text-gray-400 text-sm mb-1">Số dư hiện tại</p>
-                <p id="currentBalance" class="text-3xl font-black text-[#00e676]">$0.00</p>
-            </div>
+    <!-- GRID RESPONSIVE -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
+
+        <!-- LEFT -->
+        <div class="lg:col-span-1 bg-[#181818] p-6 md:p-8 rounded-lg border border-gray-800 shadow-xl space-y-6">
 
             <div>
                 <label class="block text-sm text-gray-300 mb-2">Số tiền cần nạp (VNĐ)</label>
                 <input id="amount" type="number" min="1000" step="1000" value="50000"
-                       class="w-full epic-input p-4 rounded text-lg"
+                       class="w-full epic-input p-3 md:p-4 rounded text-base md:text-lg"
                        placeholder="Ví dụ: 50000">
-                <p class="text-xs text-gray-500 mt-1">Demo MoMo sandbox, nên ưu tiên số tròn: 50.000, 100.000,...</p>
+                <p class="text-xs text-gray-500 mt-1">
+                    Demo MoMo sandbox, nên ưu tiên số tròn: 50.000, 100.000,...
+                </p>
             </div>
 
             <p id="errorMsg" class="text-red-500 text-sm hidden"></p>
 
-            <button onclick="loadQR()" class="w-full epic-btn text-white font-bold py-4 rounded uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all">
-                Nạp qua ngân hàng (QR)
+            <button onclick="loadQR()"
+                    class="w-full epic-btn text-white font-bold py-3 md:py-4 rounded uppercase tracking-widest text-sm md:text-base">
+                Tạo QR Thanh Toán
             </button>
 
-            <div id="qrBox" class="hidden mt-6 text-center space-y-4">
-                <p id="bankInfo"></p>
-                <p id="contentInfo" class="text-yellow-400 font-bold"></p>
-                <img id="qrImage" class="mx-auto rounded-lg border border-gray-700" width="250"/>
-            </div>
+            <div id="pendingBox" class="hidden bg-yellow-500/10 border border-yellow-500 text-yellow-300 p-4 rounded text-sm">
+    Vui lòng thanh toán hoặc hủy trước khi tạo đơn mới nha!
+</div>
+            
+
+<div id="qrBox" class="hidden mt-6 text-left space-y-4">
+
+    <img id="qrImage" class="mx-auto rounded-lg border border-gray-700 w-[220px] md:w-[260px]"/>
+
+    <div class="bg-[#202020] p-4 rounded space-y-3 text-sm">
+
+        <div class="flex justify-between items-center">
+            <span>Ngân hàng: <b id="bankName"></b></span>
+            <button onclick="copyText('bankName')" class="text-blue-400">Copy</button>
+        </div>
+
+        <div class="flex justify-between items-center">
+            <span>Số tài khoản: <b id="accountNumber"></b></span>
+            <button onclick="copyText('accountNumber')" class="text-blue-400">Copy</button>
+        </div>
+
+        <div class="flex justify-between items-center">
+            <span>Chủ tài khoản: <b id="accountName"></b></span>
+            <button onclick="copyText('accountName')" class="text-blue-400">Copy</button>
+        </div>
+
+        <div class="flex justify-between items-center">
+            <span>Nội dung: <b id="content"></b></span>
+            <button onclick="copyText('content')" class="text-blue-400">Copy</button>
+        </div>
+
+    </div>
+</div>
 
             <p class="text-gray-500 text-xs text-center">
-                Sau khi thanh toán xong, VNPay sẽ chuyển bạn về trang kết quả để xác nhận và cập nhật số dư ví.
+                Sau khi thanh toán xong, hệ thống sẽ tự cập nhật số dư ví.
             </p>
         </div>
-    </main>
 
+        <!-- RIGHT -->
+        <div class="lg:col-span-2 bg-[#181818] p-4 md:p-6 rounded-lg border border-gray-800 shadow-xl">
+
+            <h2 class="text-lg md:text-xl font-bold mb-4">Lịch sử nạp tiền</h2>
+
+            <!-- SCROLL NGANG CHO MOBILE -->
+            <div class="overflow-x-auto">
+                <div class="overflow-y-auto max-h-[400px] md:max-h-[500px]">
+
+                    <table class="min-w-[700px] w-full text-sm table-auto">
+                        <thead>
+                            <tr class="text-gray-400 border-b border-gray-700">
+                                <th class="text-left py-2 whitespace-nowrap">STT</th>
+                                <th class="text-left py-2 whitespace-nowrap">Mã đơn</th>
+                                <th class="text-left whitespace-nowrap">Số tiền</th>
+                                <th class="text-left whitespace-nowrap">Trạng thái</th>
+                                <th class="text-left whitespace-nowrap">Thời gian</th>
+                                <th class="text-left whitespace-nowrap">Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyTable"></tbody>
+                    </table>
+
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</main>
     <script>
         const API_URL = "http://localhost:5000/api";
         const token = localStorage.getItem('token');
@@ -110,7 +172,7 @@
                     return;
                 }
 
-                const payUrl = data.data; // Server returns vnpUrl as data
+                const payUrl = data.data; 
 
                 if (payUrl) {
                     window.location.href = payUrl;
@@ -130,14 +192,81 @@
             window.location.href = 'login.html';
         }
 
-        //tải qr
-        async function loadQR() {
-            const errorEl = document.getElementById('errorMsg');
-            errorEl.classList.add('hidden');
+function viewDetail(item) {
+    document.getElementById('popup').classList.remove('hidden');
 
+    document.getElementById('popupQR').src = item.qrImage;
+
+    document.getElementById('popupBankName').innerText = item.bankName;
+    document.getElementById('popupAccount').innerText = item.accountNumber;
+    document.getElementById('popupName').innerText = item.accountName || "Ngô Minh Hải";
+    document.getElementById('popupContent').innerText = item.content;
+}
+
+function closePopup() {
+    document.getElementById('popup').classList.add('hidden');
+}
+
+function copyText(id) {
+    const text = document.getElementById(id).innerText;
+    navigator.clipboard.writeText(text);
+}
+
+//tải qr
+async function loadQR() {
+    const errorEl = document.getElementById('errorMsg');
+    errorEl.classList.add('hidden');
+
+    const amount = Number(document.getElementById('amount').value);
+
+    if (!amount || amount <= 0) {
+        errorEl.innerText = "Số tiền không hợp lệ";
+        errorEl.classList.remove('hidden');
+        return;
+    }
+
+    try {
+        const res = await fetch(`${API_URL}/wallet/topup/qr`, {
+            method: 'POST',   
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ amount })   
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+            errorEl.innerText = data.message || "Có lỗi xảy ra";
+            errorEl.classList.remove('hidden');
+            return;
+        }
+
+        const transaction = data.transaction;
+
+        document.getElementById('qrBox').classList.remove('hidden');
+
+        document.getElementById('qrImage').src = transaction.qrImage;
+
+        document.getElementById('bankName').innerText = transaction.bankName;
+        document.getElementById('accountNumber').innerText = transaction.accountNumber;
+        document.getElementById('accountName').innerText = transaction.accountName || "Ngô Minh Hải";
+        document.getElementById('content').innerText = transaction.content;
+
+        await loadHistory();
+        await loadPending();
+
+    } catch (err) {
+        console.error(err);
+        errorEl.innerText = "Lỗi tải QR.";
+        errorEl.classList.remove('hidden');
+    }
+}
+
+        async function loadHistory() {
             try {
-                const res = await fetch(`${API_URL}/wallet/topup/qr`, {
-                    method: 'GET',
+                const res = await fetch(`${API_URL}/wallet/topup/history`, {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
@@ -145,31 +274,161 @@
 
                 const data = await res.json();
 
-                if (!data.qrUrl) {
-                    errorEl.innerText = "Không lấy được QR.";
-                    errorEl.classList.remove('hidden');
-                    return;
-                }
+                const table = document.getElementById('historyTable');
+                table.innerHTML = '';
 
-                document.getElementById('qrBox').classList.remove('hidden');
-                document.getElementById('qrImage').src = data.qrUrl;
+                data.forEach((item, index) => {
+                    const statusText =
+                        item.status === 'success'
+                            ? '<span class="text-green-400">Thành công</span>'
+                            : item.status === 'failed'
+                                ? '<span class="text-red-400">Đã hủy</span>'
+                                : '<span class="text-yellow-400">Đang chờ</span>';
 
-                document.getElementById('bankInfo').innerText =
-                    `Ngân hàng: ${data.bank} | STK: ${data.accountNumber}`;
+                    const isValid = item.status === 'pending' && new Date(item.expireAt) > new Date();
 
-                document.getElementById('contentInfo').innerText =
-                    `Nội dung: ${data.content}`;
+                    const actionBtn = `
+                        ${isValid ? `<button onclick='viewDetail(${JSON.stringify(item)})' class="text-blue-400 hover:underline">Xem</button>` : ''}
+                        ${item.status === 'pending' ? `<button onclick="cancelOrder('${item.orderId}')" class="text-red-400 hover:underline ml-2">Hủy</button>` : ''}
+                    `;
+
+                    const row = `
+                        <tr class="border-b border-gray-800">
+                            <td class="py-2 text-gray-400">${index + 1}</td>
+                            <td class="py-2 text-blue-400 font-mono">${item.orderId}</td>
+                            <td>${formatVND(item.amount)}</td>
+                            <td>${statusText}</td>
+                            <td>${new Date(item.createdAt).toLocaleString()}</td>
+                            <td>${actionBtn}</td>
+                        </tr>
+                    `;
+                    table.innerHTML += row;
+                });
 
             } catch (err) {
-                console.error(err);
-                errorEl.innerText = "Lỗi tải QR.";
-                errorEl.classList.remove('hidden');
+                console.error("Load history error:", err);
             }
         }
 
 
         init();
+        loadHistory();
+        loadPending();
+
+        async function cancelOrder(orderId) {
+            if (!confirm("Bạn có chắc muốn hủy đơn này?")) return;
+
+            try {
+                const res = await fetch(`${API_URL}/wallet/topup/cancel`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ orderId })
+                });
+
+                const data = await res.json();
+
+                if (!res.ok) {
+                    alert(data.message || "Hủy thất bại");
+                    return;
+                }
+
+                alert("Đã hủy đơn");
+
+                await loadHistory();
+                await loadPending();
+
+            } catch (err) {
+                console.error(err);
+                alert("Lỗi khi hủy đơn");
+            }
+        }
+
+
+let currentPendingId = null;
+
+async function loadPending() {
+    try {
+        const res = await fetch(`${API_URL}/wallet/topup/pending`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        const data = await res.json();
+
+        // ❌ không có pending
+        if (!data || !data._id) {
+            if (currentPendingId) {
+                alert("✅ Nạp tiền thành công!");
+                currentPendingId = null;
+            }
+
+            document.getElementById('pendingBox').classList.add('hidden');
+            document.getElementById('qrBox').classList.add('hidden');
+            return;
+        }
+
+        // ✅ có pending
+        currentPendingId = data._id;
+
+        document.getElementById('pendingBox').classList.remove('hidden');
+        document.getElementById('qrBox').classList.remove('hidden');
+
+        document.getElementById('qrImage').src = data.qrImage;
+        document.getElementById('bankName').innerText = data.bankName;
+        document.getElementById('accountNumber').innerText = data.accountNumber;
+        document.getElementById('accountName').innerText = data.accountName || "Ngô Minh Hải";
+        document.getElementById('content').innerText = data.content;
+
+    } catch (err) {
+        console.error(err);
+    }
+}
+
+
+setInterval(async () => {
+    await loadPending();
+    await loadHistory();
+}, 5000);
+
         </script>
+
+<div id="popup" class="fixed inset-0 bg-black/80 hidden flex items-center justify-center z-50">
+  <div class="bg-[#181818] p-6 rounded-lg w-[90%] max-w-[500px] text-center">
+
+    <img id="popupQR" class="w-full max-w-[350px] mx-auto mb-6 rounded"/>
+
+    <div class="bg-[#202020] p-4 rounded space-y-3 text-sm text-left">
+
+        <div class="flex justify-between items-center">
+            <span>Ngân hàng: <b id="popupBankName"></b></span>
+            <button onclick="copyText('popupBankName')" class="text-blue-400">Copy</button>
+        </div>
+
+        <div class="flex justify-between items-center">
+            <span>Số tài khoản: <b id="popupAccount"></b></span>
+            <button onclick="copyText('popupAccount')" class="text-blue-400">Copy</button>
+        </div>
+
+        <div class="flex justify-between items-center">
+            <span>Chủ tài khoản: <b id="popupName"></b></span>
+            <button onclick="copyText('popupName')" class="text-blue-400">Copy</button>
+        </div>
+
+        <div class="flex justify-between items-center">
+            <span>Nội dung: <b id="popupContent"></b></span>
+            <button onclick="copyText('popupContent')" class="text-blue-400">Copy</button>
+        </div>
+
+    </div>
+
+    <button onclick="closePopup()" class="mt-6 epic-btn px-6 py-2 rounded">Đóng</button>
+  </div>
+</div>
+
+
+        
         <script src="./layout.js"></script>
 </body>
 </html>

@@ -1,5 +1,5 @@
 const express = require('express');
-const { upload,uploadGameMedia } = require('../middleware/upload');
+const { upload, uploadGameMedia } = require('../middleware/upload');
 const uploadController = require('../controllers/uploadController');
 const router = express.Router();
 
@@ -39,7 +39,7 @@ router.post('/media', upload.single('file'), async function (req, res, next) {
 
 router.post('/game/:gameId', uploadGameMedia, async function (req, res, next) {
   try {
-    const gameId = req.params.gameId; 
+    const gameId = req.params.gameId;
     const files = req.files; // Lưu ý: upload nhiều file thì dùng req.files (có chữ s)
 
     if (!files || Object.keys(files).length === 0) {

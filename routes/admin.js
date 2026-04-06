@@ -3,7 +3,6 @@ const router = express.Router();
 
 const { protect, adminMiddleware } = require('../middleware/auth');
 const adminController = require('../controllers/Admin/adminController');
-const categoryController = require('../controllers/Admin/categoryController');
 
 // GET /api/admin/users - Lấy danh sách tất cả người dùng
 router.get('/users', protect, adminMiddleware, async function (req, res, next) {
@@ -33,7 +32,7 @@ router.put('/users/:id/role', protect, adminMiddleware, async function (req, res
     if (error.message.includes('không hợp lệ') || error.message.includes('Không tìm thấy')) {
       return res.status(400).json({ success: false, message: error.message });
     }
-    
+
     res.status(500).json({ success: false, message: "Lỗi server khi phân quyền người dùng" });
   }
 });
@@ -55,7 +54,7 @@ router.get('/users/:id', protect, adminMiddleware, async function (req, res, nex
 
 router.delete('/users/:id', protect, adminMiddleware, async function (req, res, next) {
   try {
-    
+
     if (req.user._id.toString() === req.params.id) {
       return res.status(400).json({ success: false, message: "Bạn không thể tự xóa tài khoản của chính mình!" });
     }
@@ -72,61 +71,41 @@ router.delete('/users/:id', protect, adminMiddleware, async function (req, res, 
 });
 
 
-// GET /api/admin/categories 
-router.get('/categories', protect, adminMiddleware, async function (req, res, next) {
+// ================= QUẢN LÝ GAME ================= //
+
+// GET /api/admin/games - Lấy tất cả game (kể cả pending, rejected)
+router.get('/games', protect, adminMiddleware, async function (req, res, next) {
   try {
-    const categories = await categoryController.GetAllCategories();
-    res.status(200).json({ success: true, data: categories });
+    const result = await adminController.GetAllGamesAdmin();
+    res.status(200).json(result);
   } catch (error) {
-    console.error("LỖI LẤY DANH SÁCH DANH MỤC:", error);
-    res.status(500).json({ success: false, message: "Lỗi server khi lấy danh sách danh mục" });
+    console.error("LỖI LẤY TẤT CẢ GAME:", error);
+    res.status(500).json({ success: false, message: "Lỗi server khi lấy danh sách game" });
   }
 });
 
-// POST /api/admin/categories 
-router.post('/categories', protect, adminMiddleware, async function (req, res, next) {
+// PATCH /api/admin/games/:id/approve - Duyệt game
+router.patch('/games/:id/approve', protect, adminMiddleware, async function (req, res, next) {
   try {
-    const { name, description } = req.body;
-    const newCategory = await categoryController.CreateCategory(name, description);
-    res.status(201).json({ success: true, message: "Thêm danh mục thành công", data: newCategory });
+    const result = await adminController.ApproveGame(req.params.id);
+    res.status(200).json({ success: true, message: "Đã duyệt game thành công!", data: result.data });
   } catch (error) {
-    console.error("LỖI THÊM DANH MỤC:", error);
-    if (error.message.includes('bắt buộc') || error.message.includes('tồn tại')) {
-      return res.status(400).json({ success: false, message: error.message });
-    }
-    res.status(500).json({ success: false, message: "Lỗi server khi thêm danh mục" });
+    console.error("LỖI DUYỆT GAME:", error);
+    const status = error.message.includes('không tìm thấy') || error.message.includes('Không tìm thấy') ? 404 : 400;
+    res.status(status).json({ success: false, message: error.message });
   }
 });
 
-// PUT /api/admin/categories/:id 
-router.put('/categories/:id', protect, adminMiddleware, async function (req, res, next) {
+// PATCH /api/admin/games/:id/reject - Từ chối game
+router.patch('/games/:id/reject', protect, adminMiddleware, async function (req, res, next) {
   try {
-    const { name, description } = req.body;
-    const updatedCategory = await categoryController.UpdateCategory(req.params.id, name, description);
-    res.status(200).json({ success: true, message: "Cập nhật danh mục thành công", data: updatedCategory });
+    const { reason } = req.body;
+    const result = await adminController.RejectGame(req.params.id, reason);
+    res.status(200).json({ success: true, message: "Đã từ chối game!", data: result.data });
   } catch (error) {
-    console.error("LỖI CẬP NHẬT DANH MỤC:", error);
-    if (error.message.includes('Không tìm thấy')) {
-      return res.status(404).json({ success: false, message: error.message });
-    }
-    if (error.message.includes('tồn tại')) {
-      return res.status(400).json({ success: false, message: error.message });
-    }
-    res.status(500).json({ success: false, message: "Lỗi server khi cập nhật danh mục" });
-  }
-});
-
-// DELETE /api/admin/categories/:id 
-router.delete('/categories/:id', protect, adminMiddleware, async function (req, res, next) {
-  try {
-    await categoryController.DeleteCategory(req.params.id);
-    res.status(200).json({ success: true, message: "Đã xóa danh mục thành công!" });
-  } catch (error) {
-    console.error("LỖI XÓA DANH MỤC:", error);
-    if (error.message === 'Không tìm thấy danh mục') {
-      return res.status(404).json({ success: false, message: error.message });
-    }
-    res.status(500).json({ success: false, message: "Lỗi server khi xóa danh mục" });
+    console.error("LỖI TỪ CHỐI GAME:", error);
+    const status = error.message.includes('không tìm thấy') || error.message.includes('Không tìm thấy') ? 404 : 400;
+    res.status(status).json({ success: false, message: error.message });
   }
 });
 

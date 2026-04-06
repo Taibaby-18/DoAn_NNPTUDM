@@ -1,30 +1,85 @@
 const express = require('express');
 const router = express.Router();
+
 const paymentController = require('../controllers/paymentController');
+const TopUpTransaction = require('../models/TopUpTransaction');
 const { protect } = require('../middleware/auth');
 
-router.get('/topup/qr', protect, async function (req, res, next) {
-    try {
-        const userId = req.user._id || req.user.id;
-        const result = await paymentController.GetBankQR(userId);
-        res.json(result);
-    } catch (error) {
-        console.error("QR ERROR:", error);
-        const status = error.statusCode || 500;
-        res.status(status).json({ message: error.message || "Lỗi server" });
-    }
+
+
+router.post('/topup/qr', protect, async (req, res) => {
+  try {
+    const { amount } = req.body;
+
+    const result = await paymentController.GetBankQR(
+      req.user._id,
+      amount
+    );
+
+    res.json(result);
+  } catch (err) {
+    console.error("QR ERROR:", err);
+    res.status(err.statusCode || 500).json({
+      message: err.message
+    });
+  }
 });
 
-router.post('/webhook/seepay', async function (req, res, next) {
-    try {
-        const { content, amount } = req.body;
-        const result = await paymentController.HandleSeepayWebhook(content, amount);
-        res.json(result);
-    } catch (error) {
-        console.error("Webhook ERROR:", error);
-        const status = error.statusCode || 500;
-        res.status(status).json({ message: error.message || "Webhook lỗi" });
-    }
+
+
+router.get('/topup/history', protect, async (req, res) => {
+  try {
+    const result = await paymentController.GetTopUpHistory(req.user._id);
+    res.json(result);
+  } catch (err) {
+    console.error("HISTORY ERROR:", err);
+    res.status(500).json({
+      message: "Lỗi lấy lịch sử"
+    });
+  }
 });
+
+
+router.post('/topup/cancel', protect, async (req, res) => {
+  try {
+    const { orderId } = req.body;
+
+    if (!orderId) {
+      return res.status(400).json({
+        message: "Thiếu orderId"
+      });
+    }
+
+    const result = await paymentController.CancelTopUp(
+      req.user._id,
+      orderId
+    );
+
+    res.json(result);
+  } catch (err) {
+    console.error("CANCEL ERROR:", err);
+    res.status(err.statusCode || 500).json({
+      message: err.message
+    });
+  }
+});
+
+router.get('/topup/pending', protect, async (req, res) => {
+  try {
+    const transaction = await TopUpTransaction.findOne({
+      user: req.user._id,
+      status: 'pending',
+      expireAt: { $gt: new Date() }
+    });
+
+    res.json(transaction);
+  } catch (err) {
+    console.error("PENDING ERROR:", err);
+    res.status(500).json({
+      message: "Lỗi lấy đơn pending"
+    });
+  }
+});
+
 
 module.exports = router;

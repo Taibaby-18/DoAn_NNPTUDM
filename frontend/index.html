@@ -241,7 +241,7 @@
         async function loadCategories() {
             const sel = document.getElementById('filterCategory');
             try {
-                const res = await fetch(`${API_URL}/games/meta/categories`);
+                const res = await fetch(`${API_URL}/category/active`);
                 const result = await res.json();
                 if (!result.success || !Array.isArray(result.data)) return;
 
@@ -302,6 +302,11 @@
                 const profile = await profileRes.json();
 
                 if (profile.success) {
+                    if (profile.data && profile.data.role && profile.data.role.name) {
+                        localStorage.setItem('userRole', profile.data.role.name);
+                        // Kích hoạt lại logic header nếu đã render trước khi init xong
+                        if (window.updateNavByRole) window.updateNavByRole(profile.data.role.name);
+                    }
                     const userNameEl = document.getElementById('userName');
                     if (userNameEl) userNameEl.innerText = profile.data.username;
 

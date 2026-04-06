@@ -8,15 +8,22 @@ const gameSchema = new mongoose.Schema({
   title: { type: String, required: true },
   description: { type: String, required: true },
   price: { type: Number, required: true },
-  
-  // -- PHẦN MEDIA MỚI NÂNG CẤP --
-  thumbnail: { type: String }, // Ảnh bìa dọc (để hiện ở trang chủ)
-  gallery: [{ type: String }], // Mảng chứa nhiều ảnh ngang (hiển thị trong trang detail)
-  trailerVideo: { type: String }, // Link video (có thể là file upload hoặc link Youtube)
-  
+
+  thumbnail: { type: String },
+  gallery: [{ type: String }],
+  trailerVideo: { type: String },
+
   pcRequirements: { type: String },
   category: { type: mongoose.Schema.Types.ObjectId, ref: 'Category' },
-  publisher: { type: mongoose.Schema.Types.ObjectId, ref: 'Publisher' }
+  publisher: { type: mongoose.Schema.Types.ObjectId, ref: 'Publisher' },
+
+  status: {
+    type: String,
+    enum: ['pending', 'approved', 'rejected'],
+    default: 'pending'
+  },
+  rejectionReason: { type: String } // Lý do nếu Admin từ chối
+
 }, { timestamps: true });
 
 module.exports = mongoose.model('Game', gameSchema);
