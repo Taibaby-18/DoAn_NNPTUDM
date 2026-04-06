@@ -400,7 +400,7 @@
             `;
 
             try {
-                const res = await fetch(`${API_URL}/games/my-games`, {
+                const res = await fetch(`${API_URL}/publisher/my-games`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 const result = await res.json();

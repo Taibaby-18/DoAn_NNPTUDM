@@ -142,7 +142,7 @@
 
         <!-- Page header -->
         <div class="mb-8 flex items-center gap-4">
-            <a href="Games.html"
+            <a href="ManagerGame.html"
                 class="flex items-center justify-center w-9 h-9 rounded-lg border border-[#2a2a2a] hover:border-[#007dfc] text-gray-400 hover:text-[#007dfc] transition">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
@@ -268,7 +268,7 @@
 
             <!-- Action buttons -->
             <div class="flex items-center justify-between gap-4 pt-2">
-                <a href="Games.html"
+                <a href="ManagerGame.html"
                     class="px-6 py-3 border border-[#2a2a2a] hover:border-gray-500 text-gray-400 hover:text-white rounded-lg font-bold uppercase text-sm transition">
                     ← Quay lại
                 </a>
@@ -408,17 +408,18 @@
                 const trailerFile = document.getElementById('createTrailerFile').files[0];
                 if (trailerFile) formData.append('trailer', trailerFile);
 
-                const res = await fetch(`${API_URL}/games`, {
+const res = await fetch(`${API_URL}/publisher/games`, {
                     method: 'POST',
                     headers: { 'Authorization': `Bearer ${token}` },
                     body: formData
                 });
+
                 const result = await res.json();
 
                 if (result.success) {
                     showStatus('🎉 Tạo game thành công! Đang chuyển hướng về danh sách...', false);
                     setTimeout(() => {
-                        window.location.href = 'Games.html';
+                        window.location.href = 'ManagerGame.html';
                     }, 1800);
                 } else {
                     showStatus(result.message || 'Lỗi tạo game', true);
