@@ -22,7 +22,7 @@ router.get('/', protect, async function (req, res, next) {
         res.status(200).json({ success: true, cart: result.cart, totalPrice: result.totalPrice });
     } catch (error) {
         console.error("LỖI LẤY GIỎ HÀNG:", error);
-        res.status(500).json({ success: false, message: 'Lỗi server khi lấy giỏ hàng' });
+        res.status(400).json({ success: false, message: error.message });
     }
 });
 

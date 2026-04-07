@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chỉnh sửa Game | Publisher | Taibaby-18 Store</title>
+    <meta name="description" content="Trang chỉnh sửa thông tin game dành cho Publisher.">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: #0d0d0d;
+            color: white;
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Form input */
+        .form-input {
+            background: #121212;
+            border: 1px solid #2a2a2a;
+            color: white;
+            border-radius: 6px;
+            padding: 10px 12px;
+            width: 100%;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .form-input:focus {
+            border-color: #007dfc;
+        }
+
+        .form-input::placeholder {
+            color: #555;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #9ca3af;
+            margin-bottom: 6px;
+        }
+
+        /* Status badges */
+        .badge-pending {
+            background: rgba(255, 171, 0, 0.15);
+            color: #ffab00;
+            border: 1px solid rgba(255, 171, 0, 0.3);
+        }
+
+        .badge-approved {
+            background: rgba(0, 230, 118, 0.15);
+            color: #00e676;
+            border: 1px solid rgba(0, 230, 118, 0.3);
+        }
+
+        .badge-rejected {
+            background: rgba(255, 82, 82, 0.15);
+            color: #ff5252;
+            border: 1px solid rgba(255, 82, 82, 0.3);
+        }
+
+        /* Upload area */
+        .upload-area {
+            border: 2px dashed #2a2a2a;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+
+        .upload-area:hover {
+            border-color: #007dfc;
+            color: #007dfc;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #181818;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #007dfc;
+        }
+
+        /* Page fade-in */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(16px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .page-card {
+            animation: fadeInUp 0.35s ease;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="header-placeholder"></div>
+
+    <main class="max-w-2xl mx-auto px-6 pb-24 pt-10">
+
+        <!-- Page header -->
+        <div class="mb-8 flex items-center gap-4">
+            <a href="ManagerGame.html"
+                class="flex items-center gap-2 text-gray-400 hover:text-white transition text-sm font-bold uppercase">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                </svg>
+                Quay lại
+            </a>
+            <div class="w-px h-5 bg-gray-800"></div>
+            <h1 class="text-2xl font-black uppercase tracking-tight text-[#ffab00] border-l-4 border-[#ffab00] pl-4">
+                ✎ Chỉnh sửa Game
+            </h1>
+        </div>
+
+        <!-- Status message -->
+        <div id="statusMessage" class="hidden mb-6 px-4 py-3 rounded-lg font-bold text-sm border"></div>
+
+        <!-- Edit form card -->
+        <div class="page-card bg-[#181818] rounded-xl border border-gray-800 shadow-2xl">
+
+            <!-- Card header with game info -->
+            <div id="gameInfoHeader" class="px-6 py-4 border-b border-gray-800 hidden">
+                <div class="flex items-center gap-3">
+                    <img id="headerThumbnail" src="" alt=""
+                        class="w-12 h-12 object-cover rounded-lg border border-gray-700">
+                    <div>
+                        <div id="headerTitle" class="font-black text-white text-base"></div>
+                        <div id="headerStatus" class="mt-0.5"></div>
+                    </div>
+                </div>
+            </div>
+
+            <form id="editGameForm" class="px-6 py-6 space-y-5">
+                <input type="hidden" id="editGameId">
+
+                <!-- Status banner -->
+                <div id="editStatusBanner" class="hidden px-4 py-3 rounded-lg text-sm font-bold border"></div>
+
+                <!-- Title -->
+                <div>
+                    <label class="form-label" for="editTitle">Tên game <span class="text-red-500">*</span></label>
+                    <input id="editTitle" type="text" class="form-input" placeholder="Nhập tên game..." required>
+                </div>
+
+                <!-- Description -->
+                <div>
+                    <label class="form-label" for="editDesc">Mô tả game <span class="text-red-500">*</span></label>
+                    <textarea id="editDesc" rows="5" class="form-input resize-none"
+                        placeholder="Mô tả chi tiết về game..." required></textarea>
+                </div>
+
+                <!-- Price & Category -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="form-label" for="editPrice">Giá (VNĐ) <span class="text-red-500">*</span></label>
+                        <input id="editPrice" type="number" min="0" class="form-input" placeholder="0" required>
+                    </div>
+                    <div>
+                        <label class="form-label" for="editCategory">Danh mục <span
+                                class="text-red-500">*</span></label>
+                        <select id="editCategory" class="form-input" required>
+                            <option value="">-- Chọn danh mục --</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- PC Requirements -->
+                <div>
+                    <label class="form-label" for="editPcReq">Cấu hình PC yêu cầu</label>
+                    <textarea id="editPcReq" rows="3" class="form-input resize-none"
+                        placeholder="VD: Windows 10, RAM 8GB, GPU GTX 1060..."></textarea>
+                </div>
+
+                <!-- Thumbnail -->
+                <div>
+                    <label class="form-label">Ảnh thumbnail</label>
+                    <img id="editCurrentThumbnail" src="" alt="Thumbnail hiện tại"
+                        class="w-full h-48 object-cover rounded-lg border border-gray-800 mb-3"
+                        onerror="this.style.display='none'">
+
+                    <label for="editThumbnail"
+                        class="upload-area flex items-center justify-center gap-2 p-4 text-gray-500 text-sm font-bold">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                        </svg>
+                        Thay ảnh thumbnail (tùy chọn)
+                    </label>
+                    <input id="editThumbnail" type="file" accept="image/*" class="hidden"
+                        onchange="previewEditThumbnail(event)">
+                    <img id="editThumbnailPreview" src="" alt="Ảnh mới xem trước"
+                        class="hidden w-full h-48 object-cover rounded-lg border border-[#007dfc] mt-3">
+                </div>
+
+                <!-- Actions -->
+                <div class="pt-2 flex flex-col sm:flex-row justify-end gap-3 border-t border-gray-800">
+                    <a href="ManagerGame.html"
+                        class="text-center px-5 py-2.5 border border-gray-700 hover:border-gray-500 text-gray-400 hover:text-white rounded-lg font-bold uppercase text-sm transition">
+                        Hủy bỏ
+                    </a>
+                    <button type="submit" id="editSubmitBtn"
+                        class="flex items-center justify-center gap-2 bg-[#ffab00] hover:bg-[#e09900] text-black px-8 py-2.5 rounded-lg font-bold uppercase text-sm transition active:scale-95">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                        Lưu thay đổi
+                    </button>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <script>
+        const API_URL = "http://localhost:5000/api";
+        const token = localStorage.getItem('token');
+        const userRole = localStorage.getItem('userRole');
+
+        // ========================= Auth Guard =========================
+        if (!token) {
+            window.location.href = '/frontend/login.html';
+        }
+        if (userRole !== 'Publisher') {
+            alert("⚠️ Bạn không có quyền truy cập trang này!");
+            window.location.href = '/frontend/index.html';
+        }
+
+        // ========================= Get Game ID from URL =========================
+        const params = new URLSearchParams(window.location.search);
+        const gameId = params.get('id');
+
+        if (!gameId) {
+            showStatus('⚠ Không tìm thấy ID game. Đang chuyển hướng...', true);
+            setTimeout(() => window.location.href = 'ManagerGame.html', 2000);
+        }
+
+        // ========================= Utils =========================
+        function showStatus(msg, isError = false) {
+            const el = document.getElementById('statusMessage');
+            el.textContent = msg;
+            el.className = 'mb-6 px-4 py-3 rounded-lg font-bold text-sm border';
+            if (isError) {
+                el.classList.add('bg-red-500/10', 'text-red-400', 'border-red-500/30');
+            } else {
+                el.classList.add('bg-green-500/10', 'text-green-400', 'border-green-500/30');
+            }
+            el.classList.remove('hidden');
+            setTimeout(() => el.classList.add('hidden'), 5000);
+        }
+
+        function getStatusBadge(status) {
+            const map = {
+                pending: { cls: 'badge-pending', label: '⏳ Chờ duyệt' },
+                approved: { cls: 'badge-approved', label: '✅ Đã duyệt' },
+                rejected: { cls: 'badge-rejected', label: '❌ Từ chối' }
+            };
+            const s = map[status] || { cls: '', label: status };
+            return `<span class="inline-block px-2 py-0.5 rounded text-xs font-bold ${s.cls}">${s.label}</span>`;
+        }
+
+        // ========================= Load Categories =========================
+        async function loadCategories() {
+            try {
+                const res = await fetch(`${API_URL}/category`);
+                const result = await res.json();
+                if (result.success) {
+                    const options = result.data.map(c => `<option value="${c._id}">${c.name}</option>`).join('');
+                    document.getElementById('editCategory').innerHTML =
+                        `<option value="">-- Chọn danh mục --</option>${options}`;
+                }
+            } catch (e) {
+                console.error('Lỗi tải danh mục:', e);
+            }
+        }
+
+        // ========================= Load Game Data =========================
+        async function loadGame() {
+            if (!gameId) return;
+
+            try {
+                const res = await fetch(`${API_URL}/games/${gameId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const result = await res.json();
+
+                if (!result.success || !result.data) {
+                    showStatus('Không tìm thấy game hoặc bạn không có quyền chỉnh sửa.', true);
+                    setTimeout(() => window.location.href = 'ManagerGame.html', 3000);
+                    return;
+                }
+
+                const game = result.data;
+                populateForm(game);
+
+            } catch (e) {
+                console.error('Lỗi tải game:', e);
+                showStatus('⚠ Mất kết nối với server', true);
+            }
+        }
+
+        function populateForm(game) {
+            document.getElementById('editGameId').value = game._id;
+            document.getElementById('editTitle').value = game.title || '';
+            document.getElementById('editDesc').value = game.description || '';
+            document.getElementById('editPrice').value = game.price ?? '';
+            document.getElementById('editPcReq').value = game.pcRequirements || '';
+
+            // Set category (wait for categories to be loaded)
+            const catId = game.category ? (game.category._id || game.category) : '';
+            const setCat = () => {
+                const sel = document.getElementById('editCategory');
+                if (sel.options.length > 1) {
+                    sel.value = catId;
+                } else {
+                    setTimeout(setCat, 100);
+                }
+            };
+            setCat();
+
+            // Thumbnail
+            const thumb = document.getElementById('editCurrentThumbnail');
+            if (game.thumbnail) {
+                thumb.src = game.thumbnail.startsWith('http')
+                    ? game.thumbnail
+                    : `http://localhost:5000${game.thumbnail}`;
+                thumb.style.display = 'block';
+            } else {
+                thumb.style.display = 'none';
+            }
+
+            // Header info
+            const header = document.getElementById('gameInfoHeader');
+            document.getElementById('headerTitle').textContent = game.title;
+            document.getElementById('headerStatus').innerHTML = getStatusBadge(game.status);
+            if (game.thumbnail) {
+                const hThumb = document.getElementById('headerThumbnail');
+                hThumb.src = game.thumbnail.startsWith('http')
+                    ? game.thumbnail
+                    : `http://localhost:5000${game.thumbnail}`;
+            }
+            header.classList.remove('hidden');
+
+            // Status banner
+            const banner = document.getElementById('editStatusBanner');
+            if (game.status === 'approved') {
+                banner.textContent = '✅ Game đã được duyệt. Chỉnh sửa sẽ đặt lại trạng thái chờ duyệt.';
+                banner.className = 'px-4 py-3 rounded-lg text-sm font-bold border badge-approved';
+                banner.classList.remove('hidden');
+            } else if (game.status === 'pending') {
+                banner.textContent = '⏳ Game đang chờ duyệt từ Admin.';
+                banner.className = 'px-4 py-3 rounded-lg text-sm font-bold border badge-pending';
+                banner.classList.remove('hidden');
+            } else if (game.status === 'rejected') {
+                banner.textContent = '❌ Game bị từ chối. Hãy chỉnh sửa và gửi lại.';
+                banner.className = 'px-4 py-3 rounded-lg text-sm font-bold border badge-rejected';
+                banner.classList.remove('hidden');
+            }
+        }
+
+        // ========================= Thumbnail Preview =========================
+        function previewEditThumbnail(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const preview = document.getElementById('editThumbnailPreview');
+            preview.src = URL.createObjectURL(file);
+            preview.classList.remove('hidden');
+        }
+
+        // ========================= Submit =========================
+        document.getElementById('editGameForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const id = document.getElementById('editGameId').value;
+            const btn = document.getElementById('editSubmitBtn');
+            btn.disabled = true;
+            btn.innerHTML = `<svg class="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg> Đang lưu...`;
+
+            try {
+                const formData = new FormData();
+                formData.append('title', document.getElementById('editTitle').value.trim());
+                formData.append('description', document.getElementById('editDesc').value.trim());
+                formData.append('price', document.getElementById('editPrice').value);
+                formData.append('category', document.getElementById('editCategory').value);
+                formData.append('pcRequirements', document.getElementById('editPcReq').value.trim());
+
+                const thumbnail = document.getElementById('editThumbnail').files[0];
+                if (thumbnail) formData.append('thumbnail', thumbnail);
+
+                const res = await fetch(`${API_URL}/publisher/games/${id}`, { 
+                    method: 'PUT',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    body: formData
+                });
+                const result = await res.json();
+
+                if (result.success) {
+                    showStatus('✅ Cập nhật game thành công! Đang chuyển về trang quản lý...', false);
+                    setTimeout(() => window.location.href = 'ManagerGame.html', 1800);
+                } else {
+                    showStatus(result.message || 'Lỗi cập nhật', true);
+                }
+            } catch (err) {
+                console.error(err);
+                showStatus('⚠ Lỗi kết nối với server', true);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Lưu thay đổi`;
+            }
+        });
+
+        // ========================= Init =========================
+        loadCategories();
+        loadGame();
+    </script>
+
+    <script src="../layout.js"></script>
+</body>
+
+</html>

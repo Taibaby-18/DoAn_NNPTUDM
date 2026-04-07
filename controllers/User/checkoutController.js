@@ -27,7 +27,7 @@ module.exports = {
         user.walletBalance -= game.price;
         if (!user.library) user.library = [];
         user.library.push(game._id);
-
+        user.cart = user.cart.filter(id => id.toString() !== gameId); 
         // 6. Lưu lại lịch sử giao dịch (Biên lai)
         const transaction = await Transaction.create({
             user: user._id,

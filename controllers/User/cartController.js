@@ -30,7 +30,12 @@ module.exports = {
         if (!user || !user.cart || user.cart.length === 0) {
             return { cart: [], totalPrice: 0 };
         }
-
+        if (user.cart.some(game => !game.price)) {
+            throw new Error('Có game trong giỏ hàng không có giá!');
+        }
+        if (user.cart.some(game => game.price < 0)) {
+            throw new Error('Có game trong giỏ hàng có giá âm!');
+        }
         let totalPrice = 0;
         user.cart.forEach(game => {
             totalPrice += game.price || 0;
@@ -46,9 +51,8 @@ module.exports = {
         if (!user.cart || user.cart.length === 0) {
             throw new Error('Giỏ hàng đang trống!');
         }
-
         const totalPrice = user.cart.reduce((total, game) => total + game.price, 0);
-
+        
         if (user.walletBalance < totalPrice) {
             throw new Error(`Ví không đủ tiền. Cần thêm ${totalPrice - user.walletBalance} để thanh toán!`);
         }
