@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+
 // Nhớ sửa lại đường dẫn import cho đúng thư mục models của bạn
 const Category = require('../models/Category');
 const Publisher = require('../models/Publisher');
@@ -6,26 +7,66 @@ const Game = require('../models/Game');
 
 const MONGO_URI = 'mongodb://localhost:27017/gameplatform';
 
-const seedDB = async () => {
+const seedDatabase = async () => {
   try {
+    // 1. Kết nối vào database
     await mongoose.connect(MONGO_URI);
     console.log('✅ Đã kết nối MongoDB thành công!');
 
-    // Lấy dữ liệu Category và Publisher từ database để lấy _id
-    const categories = await Category.find();
+    // 2. Xóa dữ liệu cũ
+    await Game.deleteMany({});
+    await Category.deleteMany({});
+    console.log('🗑️ Đã xóa sạch dữ liệu Game và Category cũ!');
+
+    // 3. Khởi tạo dữ liệu Category
+    const seedCategories = [
+      {
+        name: 'Sinh tồn (Survival)',
+        description: 'Người chơi bắt đầu với lượng tài nguyên hạn hẹp và phải chế tạo công cụ, xây dựng căn cứ để sống sót (ví dụ: Palworld, Valheim).'
+      },
+      {
+        name: 'Hành động nhập vai (ARPG)',
+        description: 'Thể loại kết hợp giữa yếu tố hành động nhịp độ cao và sự phát triển nhân vật sâu sắc của game nhập vai (ví dụ: Sekiro: Shadows Die Twice, Ghost of Tsushima).'
+      },
+      {
+        name: 'Thể thao (Sports)',
+        description: 'Mô phỏng các môn thể thao ngoài đời thực mang tính cạnh tranh cao, tập trung vào kỹ năng điều khiển và chiến thuật (ví dụ: FIFA 23, PES 2021).'
+      },
+      {
+        name: 'Thế giới mở (Open World)',
+        description: 'Cung cấp một thế giới rộng lớn, cho phép người chơi tự do di chuyển, khám phá và làm nhiệm vụ theo cách riêng thay vì đi theo tuyến tính.'
+      },
+      {
+        name: 'Indie',
+        description: 'Những tựa game độc lập được phát triển bởi các studio nhỏ, thường mang đậm tính sáng tạo và phong cách đồ họa độc đáo.'
+      }
+    ];
+
+    // Thêm Category vào DB và lưu kết quả trả về để lấy _id
+    const createdCategories = await Category.insertMany(seedCategories);
+    console.log(`🏷️ Đã seed thành công ${createdCategories.length} thể loại game!`);
+
+    // 4. Lấy dữ liệu Publisher từ database
     const publishers = await Publisher.find();
 
-    if (categories.length === 0 || publishers.length === 0) {
-      console.log('⚠️ Cảnh báo: Database chưa có Category hoặc Publisher.');
-      console.log('Vui lòng chạy lệnh node seedCategory.js và node seedPublisher.js trước!');
+    if (publishers.length === 0) {
+      console.log('⚠️ Cảnh báo: Database chưa có Publisher.');
+      console.log('Vui lòng chạy file seed User & Publisher trước!');
       process.exit(1);
     }
 
-    // Hàm helper để tìm _id theo tên, nếu không thấy thì lấy đại thằng đầu tiên để tránh lỗi
-    const getCatId = (name) => categories.find(c => c.name === name)?._id || categories[0]._id;
-    const getPubId = (name) => publishers.find(p => p.name === name)?._id || publishers[0]._id;
+    // Hàm helper để tìm _id theo tên
+    const getCatId = (name) => {
+      const cat = createdCategories.find(c => c.name === name);
+      return cat ? cat._id : createdCategories[0]._id;
+    };
+    
+    const getPubId = (name) => {
+      const pub = publishers.find(p => p.name === name);
+      return pub ? pub._id : publishers[0]._id;
+    };
 
-    // --- CẬP NHẬT: THÊM TRƯỜNG STATUS CHO TẤT CẢ CÁC GAME ĐỂ HIỂN THỊ ĐƯỢC TRÊN STORE ---
+    // 5. Khởi tạo dữ liệu Game
     const seedGames = [
       {
         title: 'Palworld',
@@ -40,7 +81,7 @@ const seedDB = async () => {
         pcRequirements: 'OS: Windows 10 64-bit | CPU: i5-3570K | RAM: 16GB | GPU: GTX 1050 Ti',
         category: getCatId('Sinh tồn (Survival)'),
         publisher: getPubId('Pocketpair'),
-        status: 'approved' // <--- Đã duyệt
+        status: 'approved'
       },
       {
         title: 'Sekiro: Shadows Die Twice',
@@ -55,7 +96,7 @@ const seedDB = async () => {
         pcRequirements: 'OS: Windows 10 64-bit | CPU: Intel Core i5-2500K | RAM: 8GB | GPU: GTX 970',
         category: getCatId('Hành động nhập vai (ARPG)'),
         publisher: getPubId('Activision'),
-        status: 'approved' // <--- Đã duyệt
+        status: 'approved'
       },
       {
         title: 'Ghost of Tsushima',
@@ -70,7 +111,7 @@ const seedDB = async () => {
         pcRequirements: 'OS: Windows 10 64-bit | CPU: Intel Core i3-7100 | RAM: 8GB | GPU: GTX 960',
         category: getCatId('Thế giới mở (Open World)'),
         publisher: getPubId('PlayStation Studios'),
-        status: 'approved' // <--- Đã duyệt
+        status: 'approved'
       },
       {
         title: 'Valheim',
@@ -85,7 +126,7 @@ const seedDB = async () => {
         pcRequirements: 'OS: Windows 10 64-bit | CPU: 2.6 GHz Quad Core | RAM: 8GB | GPU: GTX 950',
         category: getCatId('Sinh tồn (Survival)'),
         publisher: getPubId('Coffee Stain Publishing'),
-        status: 'approved' // <--- Đã duyệt
+        status: 'approved'
       },
       {
         title: 'FIFA 23',
@@ -100,7 +141,7 @@ const seedDB = async () => {
         pcRequirements: 'OS: Windows 10 64-bit | CPU: Intel Core i5 6600k | RAM: 8GB | GPU: GTX 1050 Ti',
         category: getCatId('Thể thao (Sports)'),
         publisher: getPubId('Electronic Arts (EA)'),
-        status: 'approved' // <--- Đã duyệt
+        status: 'approved'
       },
       {
         title: 'PES 2021 (eFootball)',
@@ -115,7 +156,7 @@ const seedDB = async () => {
         pcRequirements: 'OS: Windows 10 64-bit | CPU: Intel Core i5-3470 | RAM: 8GB | GPU: GTX 670',
         category: getCatId('Thể thao (Sports)'),
         publisher: getPubId('Electronic Arts (EA)'),
-        status: 'approved' // <--- Đã duyệt
+        status: 'approved'
       },
       {
         title: 'God of War',
@@ -130,7 +171,7 @@ const seedDB = async () => {
         pcRequirements: 'OS: Windows 10 64-bit | CPU: Intel i5-2500k | RAM: 8GB | GPU: GTX 960',
         category: getCatId('Hành động nhập vai (ARPG)'),
         publisher: getPubId('PlayStation Studios'),
-        status: 'approved' // <--- Đã duyệt
+        status: 'approved'
       },
       {
         title: 'Marvel\'s Spider-Man Remastered',
@@ -145,7 +186,7 @@ const seedDB = async () => {
         pcRequirements: 'OS: Windows 10 64-bit | CPU: Intel Core i3-4160 | RAM: 8GB | GPU: GTX 950',
         category: getCatId('Thế giới mở (Open World)'),
         publisher: getPubId('PlayStation Studios'),
-        status: 'approved' // <--- Đã duyệt
+        status: 'approved'
       },
       {
         title: 'Call of Duty: Modern Warfare II',
@@ -160,7 +201,7 @@ const seedDB = async () => {
         pcRequirements: 'OS: Windows 10 64-bit | CPU: Intel Core i3-6100 | RAM: 8GB | GPU: GTX 960',
         category: getCatId('Hành động nhập vai (ARPG)'),
         publisher: getPubId('Activision'),
-        status: 'approved' // <--- Đã duyệt
+        status: 'approved'
       },
       {
         title: 'It Takes Two',
@@ -175,9 +216,8 @@ const seedDB = async () => {
         pcRequirements: 'OS: Windows 10 64-bit | CPU: Intel Core i3-2100 | RAM: 8GB | GPU: GTX 660',
         category: getCatId('Indie'),
         publisher: getPubId('Electronic Arts (EA)'),
-        status: 'approved' // <--- Đã duyệt
+        status: 'approved'
       },
-      // --- THÊM 1 GAME MẪU Ở TRẠNG THÁI PENDING ĐỂ TEST CHỨC NĂNG DUYỆT ---
       {
         title: 'Game Test Đang Chờ Duyệt',
         description: 'Đây là game tạo ra để test màn hình Admin.',
@@ -188,24 +228,22 @@ const seedDB = async () => {
         pcRequirements: 'OS: Windows 10',
         category: getCatId('Indie'),
         publisher: getPubId('Pocketpair'),
-        status: 'pending' // <--- Chờ duyệt, sẽ KHÔNG hiện ra trang chủ
+        status: 'pending' // Chờ duyệt
       }
     ];
 
-    // Xóa dữ liệu cũ
-    await Game.deleteMany({});
-    console.log('🗑️ Đã xóa dữ liệu game cũ!');
-
-    // Thêm dữ liệu mới
-    await Game.insertMany(seedGames);
-    console.log('🕹️ Đã seed thành công 11 tựa game mới!');
+    // Thêm Game vào DB
+    const createdGames = await Game.insertMany(seedGames);
+    console.log(`🕹️ Đã seed thành công ${createdGames.length} tựa game mới!`);
 
   } catch (error) {
     console.error('❌ Có lỗi xảy ra trong quá trình seed dữ liệu:', error);
   } finally {
+    // 6. Ngắt kết nối database
     mongoose.connection.close();
     console.log('🔌 Đã ngắt kết nối database.');
   }
 };
 
-seedDB();
+// Chạy hàm seed
+seedDatabase();
