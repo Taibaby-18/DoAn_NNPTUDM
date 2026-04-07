@@ -21,4 +21,6 @@ const uploadGameMedia = upload.fields([
   { name: 'trailer', maxCount: 1 }    
 ]);
 
-module.exports = { upload, uploadGameMedia };
+module.exports = { 
+  uploadGameMedia  
+};
