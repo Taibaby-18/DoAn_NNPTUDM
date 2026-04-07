@@ -1,7 +1,6 @@
 const MediaAsset = require('../models/MediaAsset');
 
 module.exports = {
-  // Upload media file
   UploadMedia: async function (entityId, entityModel, mediaType, filePath) {
     const mediaAsset = new MediaAsset({
       entityId,

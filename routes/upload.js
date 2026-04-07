@@ -3,14 +3,12 @@ const { upload, uploadGameMedia } = require('../middleware/upload');
 const uploadController = require('../controllers/uploadController');
 const router = express.Router();
 
-// POST /api/upload - upload single file
 router.post('/', upload.single('file'), async function (req, res, next) {
   try {
     if (!req.file) {
       return res.status(400).json({ success: false, message: 'Vui lòng chọn một file!' });
     }
 
-    // For single file, you can create directly or call controller
     res.status(200).json({
       success: true,
       message: 'Upload thành công!',
@@ -21,7 +19,6 @@ router.post('/', upload.single('file'), async function (req, res, next) {
   }
 });
 
-// POST /api/upload/media - structured media asset
 router.post('/media', upload.single('file'), async function (req, res, next) {
   try {
     const { entityId, entityModel, mediaType } = req.body;
@@ -40,7 +37,7 @@ router.post('/media', upload.single('file'), async function (req, res, next) {
 router.post('/game/:gameId', uploadGameMedia, async function (req, res, next) {
   try {
     const gameId = req.params.gameId;
-    const files = req.files; // Lưu ý: upload nhiều file thì dùng req.files (có chữ s)
+    const files = req.files; 
 
     if (!files || Object.keys(files).length === 0) {
       return res.status(400).json({ success: false, message: 'Vui lòng upload file!' });
@@ -54,13 +51,11 @@ router.post('/game/:gameId', uploadGameMedia, async function (req, res, next) {
       uploadedAssets.push(asset);
     }
 
-    // Xử lý Trailer
     if (files.trailer) {
       const asset = await uploadController.UploadMedia(gameId, 'Game', 'Trailer', `/uploads/${files.trailer[0].filename}`);
       uploadedAssets.push(asset);
     }
 
-    // Xử lý Gallery (nhiều ảnh)
     if (files.gallery) {
       for (const file of files.gallery) {
         const asset = await uploadController.UploadMedia(gameId, 'Game', 'Gallery', `/uploads/${file.filename}`);

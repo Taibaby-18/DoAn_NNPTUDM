@@ -4,7 +4,6 @@ const publisherController = require('../controllers/Publisher/publisherControlle
 const { protect, authorize } = require('../middleware/auth');
 const { uploadGameMedia } = require('../middleware/upload');
 
-// GET /api/publisher/my-games - Xem danh sách game của chính mình
 router.get('/my-games', protect, authorize('Publisher'), async function (req, res, next) {
   try {
     const userId = req.user._id || req.user.id;
@@ -15,7 +14,6 @@ router.get('/my-games', protect, authorize('Publisher'), async function (req, re
   }
 });
 
-// POST /api/publisher/games - Tạo game mới
 router.post('/games', protect, authorize('Publisher'), uploadGameMedia, async function (req, res, next) {
   try {
     const { title, description, price, pcRequirements, category, trailerUrl } = req.body;
@@ -39,7 +37,6 @@ router.post('/games', protect, authorize('Publisher'), uploadGameMedia, async fu
   }
 });
 
-// PUT /api/publisher/games/:id - Chỉnh sửa game của chính mình
 router.put('/games/:id', protect, authorize('Publisher'), uploadGameMedia, async function (req, res, next) {
   try {
     const { title, description, price, pcRequirements, category } = req.body;

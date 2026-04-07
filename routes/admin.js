@@ -4,7 +4,6 @@ const router = express.Router();
 const { protect, adminMiddleware } = require('../middleware/auth');
 const adminController = require('../controllers/Admin/adminController');
 
-// GET /api/admin/users - Lấy danh sách tất cả người dùng
 router.get('/users', protect, adminMiddleware, async function (req, res, next) {
   try {
     const users = await adminController.GetAllUsers();
@@ -15,7 +14,6 @@ router.get('/users', protect, adminMiddleware, async function (req, res, next) {
   }
 });
 
-// PUT /api/admin/users/:id/role - Phân quyền người dùng
 router.put('/users/:id/role', protect, adminMiddleware, async function (req, res, next) {
   try {
     const userId = req.params.id;
@@ -71,9 +69,7 @@ router.delete('/users/:id', protect, adminMiddleware, async function (req, res, 
 });
 
 
-// ================= QUẢN LÝ GAME ================= //
 
-// GET /api/admin/games - Lấy tất cả game (kể cả pending, rejected)
 router.get('/games', protect, adminMiddleware, async function (req, res, next) {
   try {
     const result = await adminController.GetAllGamesAdmin();
@@ -84,7 +80,6 @@ router.get('/games', protect, adminMiddleware, async function (req, res, next) {
   }
 });
 
-// PATCH /api/admin/games/:id/approve - Duyệt game
 router.patch('/games/:id/approve', protect, adminMiddleware, async function (req, res, next) {
   try {
     const result = await adminController.ApproveGame(req.params.id);
@@ -96,7 +91,6 @@ router.patch('/games/:id/approve', protect, adminMiddleware, async function (req
   }
 });
 
-// PATCH /api/admin/games/:id/reject - Từ chối game
 router.patch('/games/:id/reject', protect, adminMiddleware, async function (req, res, next) {
   try {
     const { reason } = req.body;

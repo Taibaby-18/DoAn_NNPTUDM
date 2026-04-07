@@ -6,7 +6,7 @@ module.exports = {
     const l = parseInt(limit);
     const actualLimit = l > 0 ? Math.min(l, 50) : 0;
 
-    const filter = { status: 'approved' }; // CHỐT CHẶN: Chỉ show game đã duyệt
+    const filter = { status: 'approved' }; 
 
     if (name.trim()) {
       filter.title = { $regex: name.trim(), $options: 'i' };
@@ -40,14 +40,12 @@ module.exports = {
     };
   },
 
-  // 3. Lấy danh sách danh mục (Chỉ tính game đã duyệt)
   GetGameCategories: async function () {
     const ids = await Game.distinct('category', { category: { $ne: null }, status: 'approved' });
     const categories = await Category.find({ _id: { $in: ids } }).select('_id name').sort({ name: 1 });
     return { success: true, count: categories.length, data: categories };
   },
 
-  // 4. Lấy chi tiết 1 game
   GetGameById: async function (id) {
     const game = await Game.findById(id).populate('publisher', 'name').populate('category', 'name');
     if (!game) throw new Error('Game not found');

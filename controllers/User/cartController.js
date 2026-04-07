@@ -3,7 +3,6 @@ const Game = require('../../models/Game');
 const Transaction = require('../../models/Transaction');
 
 module.exports = {
-    // 1. Thêm game vào giỏ hàng
     AddToCart: async function (userId, gameId) {
         const user = await User.findById(userId);
         const game = await Game.findById(gameId);
@@ -23,7 +22,6 @@ module.exports = {
         return true;
     },
 
-    // 2. Xem giỏ hàng & Tính tổng tiền
     GetCart: async function (userId) {
         const user = await User.findById(userId).populate('cart', 'title price thumbnail imageUrl'); 
             
@@ -44,7 +42,6 @@ module.exports = {
         return { cart: user.cart, totalPrice: totalPrice };
     },
 
-    // 3. Thanh toán toàn bộ giỏ hàng
     CheckoutCart: async function (userId) {
         const user = await User.findById(userId).populate('cart');
 
@@ -76,7 +73,6 @@ module.exports = {
         return user.walletBalance; 
     },
 
-    // 4. Xóa một game cụ thể khỏi giỏ hàng
     RemoveFromCart: async function (userId, gameId) {
         const user = await User.findById(userId);
         if (!user) throw new Error('User không tồn tại');

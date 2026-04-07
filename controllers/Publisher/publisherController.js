@@ -4,7 +4,6 @@ const User = require('../../models/User');
 
 module.exports = {
 
-  // 1. Tạo game mới (Model tự động set status là 'pending')
   CreateGame: async function (title, description, price, pcRequirements, category, publisher, thumbnail, gallery, trailerVideo) {
     const newGame = await Game.create({
       title,
@@ -20,7 +19,6 @@ module.exports = {
     return { success: true, data: newGame };
   },
 
-  // 2. Chỉnh sửa game của chính mình (reset về pending sau khi sửa)
   UpdateGame: async function (gameId, userId, fieldsToUpdate) {
     const user = await User.findById(userId);
     if (!user || !user.publisherProfile) {
@@ -47,7 +45,6 @@ module.exports = {
     return { success: true, data: updatedGame };
   },
 
-  // 3. Xem danh sách game của chính mình (cả đã duyệt và chưa duyệt)
   GetMyGames: async function (userId) {
     const user = await User.findById(userId);
 

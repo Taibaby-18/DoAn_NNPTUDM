@@ -30,7 +30,6 @@ module.exports = {
       throw error;
     }
 
-    // ✅ 1. check đơn pending CHƯA HẾT HẠN
     const existingPending = await TopUpTransaction.findOne({
       user: userId,
       status: 'pending',
@@ -44,7 +43,6 @@ module.exports = {
       };
     }
 
-    // ✅ 2. tạo đơn mới
     const code = user.depositCode;
     const orderId = generateOrderId();
 
@@ -54,10 +52,10 @@ module.exports = {
 
     const qrImage = `https://img.vietqr.io/image/MB-0389306604-compact.png?amount=${amount}&addInfo=${content}&accountName=NGO%20MINH%20HAI`;
 
-    const expireAt = new Date(Date.now() + 15 * 60 * 1000); // 15 phút
+    const expireAt = new Date(Date.now() + 15 * 60 * 1000); 
 
     const transaction = await TopUpTransaction.create({
-      _id: transactionId, // 🔥 QUAN TRỌNG
+      _id: transactionId, 
       user: user._id,
       code: code,
       orderId: orderId,
@@ -83,7 +81,7 @@ module.exports = {
   HandleSeepayWebhook: async function (data) {
     console.log("SEPAY DATA:", data);
 
-    const amount = Number(data.transferAmount); // ✅ FIX
+    const amount = Number(data.transferAmount); 
     const content = data.content || data.description;
 
     if (!content || !amount) return;

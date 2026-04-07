@@ -1,10 +1,9 @@
 const express = require('express');
-const categoryController = require('../controllers/Admin/categoryController'); // Đường dẫn chuẩn của bạn
-const gameController = require('../controllers/gameController'); // Vẫn cần import cái này để dùng hàm GetGameCategories
+const categoryController = require('../controllers/Admin/categoryController'); 
+const gameController = require('../controllers/gameController'); 
 const { protect, authorize } = require('../middleware/auth');
 const router = express.Router();
 
-// 1. GET /api/categories - Lấy tất cả danh mục (Bao gồm cả danh mục rỗng chưa có game)
 router.get('/', async function (req, res, next) {
     try {
         const categories = await categoryController.GetAllCategories();
@@ -18,7 +17,6 @@ router.get('/', async function (req, res, next) {
     }
 });
 
-// 2. GET /api/categories/active - Lấy các danh mục ĐANG CÓ GAME (Cho Menu Cửa Hàng)
 router.get('/active', async function (req, res, next) {
     try {
         const result = await gameController.GetGameCategories();
@@ -28,7 +26,6 @@ router.get('/active', async function (req, res, next) {
     }
 });
 
-// 3. POST /api/categories - Thêm danh mục mới (CHỈ ADMIN)
 router.post('/', protect, authorize('Admin'), async function (req, res, next) {
     try {
         const { name, description } = req.body;
@@ -44,7 +41,6 @@ router.post('/', protect, authorize('Admin'), async function (req, res, next) {
     }
 });
 
-// 4. PUT /api/categories/:id - Cập nhật danh mục (CHỈ ADMIN)
 router.put('/:id', protect, authorize('Admin'), async function (req, res, next) {
     try {
         const { name, description } = req.body;
@@ -60,7 +56,6 @@ router.put('/:id', protect, authorize('Admin'), async function (req, res, next) 
     }
 });
 
-// 5. DELETE /api/categories/:id - Xóa danh mục (CHỈ ADMIN)
 router.delete('/:id', protect, authorize('Admin'), async function (req, res, next) {
     try {
         await categoryController.DeleteCategory(req.params.id);

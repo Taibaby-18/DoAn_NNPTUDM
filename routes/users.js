@@ -4,10 +4,8 @@ var router = express.Router();
 let { protect } = require('../middleware/auth'); 
 let userController = require('../controllers/User/userController'); 
 
-// Gọi logic ngay tại Router theo đúng Teacher's Style
 router.get('/profile', protect, async function (req, res, next) {
     try {
-        // Lấy ID từ token (req.user) truyền xuống hàm Controller (Service)
         let result = await userController.GetUserProfile(req.user.id);
         
         if (result) {

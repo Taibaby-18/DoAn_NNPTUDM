@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
 
-// Đảm bảo các model được đăng ký trước khi populate theo ref name
 require('./Category');
 require('./Publisher');
 
@@ -22,7 +21,7 @@ const gameSchema = new mongoose.Schema({
     enum: ['pending', 'approved', 'rejected'],
     default: 'pending'
   },
-  rejectionReason: { type: String } // Lý do nếu Admin từ chối
+  rejectionReason: { type: String } 
 
 }, { timestamps: true });
 

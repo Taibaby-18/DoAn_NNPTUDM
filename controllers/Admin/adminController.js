@@ -47,7 +47,6 @@ module.exports = {
 
  
   DeleteUser: async function (userId) {
-    // Populate role list to check if user is admin before deleting
     const user = await User.findById(userId).populate('role', 'name');
     if (!user) {
       throw new Error('Không tìm thấy người dùng');
@@ -61,9 +60,7 @@ module.exports = {
     return true;
   },
 
-  // ================= QUẢN LÝ GAME ================= //
 
-  // Lấy TẤT CẢ game (kể cả pending, rejected) — Admin xem toàn bộ
   GetAllGamesAdmin: async function () {
     const games = await Game.find()
       .populate('publisher', 'name')
@@ -72,7 +69,6 @@ module.exports = {
     return { success: true, count: games.length, data: games };
   },
 
-  // Duyệt game của Publisher
   ApproveGame: async function (gameId) {
     const game = await Game.findById(gameId);
     if (!game) throw new Error('Không tìm thấy game');
@@ -83,7 +79,6 @@ module.exports = {
     return { success: true, data: game };
   },
 
-  // Từ chối game của Publisher
   RejectGame: async function (gameId, reason) {
     const game = await Game.findById(gameId);
     if (!game) throw new Error('Không tìm thấy game');

@@ -12,7 +12,6 @@ router.get('/', async function (req, res, next) {
   }
 });
 
-// ================= API CHI TIẾT GAME ================= //
 
 router.get('/:id', async function (req, res, next) {
   try {
